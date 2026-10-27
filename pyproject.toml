@@ -32,6 +32,7 @@ dev = [
     "coverage==7.17.0",
     "hypothesis==6.170.12",
     "pre-commit==4.7.0",
+    "import-linter==2.15",
 ]
 
 [tool.setuptools.packages.find]
@@ -88,6 +89,57 @@ pythonpath = ["."]
 addopts = ["--import-mode=importlib", "-ra", "--strict-markers", "--strict-config"]
 xfail_strict = true
 filterwarnings = ["error"]
+
+# ---------------------------------------------------------------- import-linter (M0.4)
+# Regras de dependência de PROJECT_CONTEXT.md §6.2. Rodar: lint-imports
+# Pacotes que ainda não existem (adapters, apps, django...) podem ser proibidos desde já: o import-linter só acusa
+# quando o import aparece. Ao criar `adapters` (M1.5) e `apps` (M3.1), incluí-los em root_packages e ativar os
+# contratos comentados no fim desta seção.
+[tool.importlinter]
+root_packages = ["core"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+id = "core-puro"
+name = "core é Python puro: não importa adaptadores, apps, frameworks, banco, UI, rede nem ferramentas de teste"
+type = "forbidden"
+source_modules = ["core"]
+forbidden_modules = [
+    # camadas externas do próprio projeto
+    "adapters", "apps", "tools", "tests",
+    # UI
+    "tkinter", "customtkinter",
+    # web
+    "django", "rest_framework", "drf_spectacular",
+    # banco e relatórios
+    "sqlite3", "reportlab", "qrcode", "barcode",
+    # dados demo e empacotamento
+    "faker", "PyInstaller",
+    # rede e processos (I/O fica nos adaptadores)
+    "socket", "ssl", "http", "urllib", "subprocess", "multiprocessing",
+    # ferramentas de teste
+    "pytest", "hypothesis",
+]
+
+[[tool.importlinter.contracts]]
+id = "core-camadas"
+name = "Dentro do core: services usa ports e domain; ports usa domain; domain não depende de ninguém"
+type = "layers"
+layers = ["core.services", "core.ports", "core.domain"]
+
+# A ativar quando os pacotes existirem (ver comentário acima):
+# [[tool.importlinter.contracts]]
+# id = "adapters-sem-apps"
+# name = "Adaptadores nunca importam apps"
+# type = "forbidden"
+# source_modules = ["adapters"]
+# forbidden_modules = ["apps"]
+#
+# [[tool.importlinter.contracts]]
+# id = "apps-independentes"
+# name = "Um app nunca importa outro app"
+# type = "independence"
+# modules = ["apps.desktop", "apps.web"]
 
 # ---------------------------------------------------------------- coverage
 [tool.coverage.run]

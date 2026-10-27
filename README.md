@@ -32,8 +32,19 @@ O pacote `core` fica instalado em modo editável: alterações no código valem 
 ### Verificação (`check`)
 
 `python tools/check.py` é o comando único de qualidade (no Linux/CI, `make check` chama o mesmo script). Ele roda:
-ruff (lint e formato), mypy (estrito), pytest com cobertura do `core` (mínimo 90%). Uma etapa só está pronta com o
-check verde. O pre-commit roda ruff, mypy e pytest a cada commit.
+ruff (lint e formato), mypy (estrito), import-linter (regras de arquitetura) e pytest com cobertura do `core`
+(mínimo 90%). Uma etapa só está pronta com o check verde. O pre-commit roda ruff, mypy, import-linter e pytest a cada
+commit.
+
+### Regras de arquitetura (import-linter)
+
+Os contratos ficam no `pyproject.toml`, seção `[tool.importlinter]`:
+
+- **`core-puro`**: o `core` não importa adaptadores, apps, Tkinter, Django, `sqlite3`, bibliotecas de relatório,
+  rede, subprocessos nem ferramentas de teste.
+- **`core-camadas`**: dentro do `core`, `services` → `ports` → `domain` (nunca o contrário).
+
+Imports dinâmicos (`importlib.import_module("tkinter")`) **não** são detectados; a revisão de código cobre esse caso.
 
 Os testes com hypothesis usam o perfil `dev` (rápido) por padrão; `HYPOTHESIS_PROFILE=ci` deixa a execução
 determinística e com mais exemplos.

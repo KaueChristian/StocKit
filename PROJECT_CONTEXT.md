@@ -52,9 +52,9 @@
 | Campo | Valor |
 |---|---|
 | Milestone aberto | **M0 — Fundação** |
-| Última etapa concluída | **M0.3** — ruff, mypy estrito, pytest + cobertura, hypothesis, pre-commit e `tools/check.py` verdes (2026-10-27) |
-| Próxima etapa | **M0.4** — contratos do `import-linter` (e incluí-lo no `tools/check.py` e no pre-commit) |
-| Bloqueios | Nenhum |
+| Última etapa concluída | **M0.4** — contratos do import-linter (`core-puro`, `core-camadas`) no check e no pre-commit (2026-10-27) |
+| Próxima etapa | **M0.5** — CI no GitHub Actions (lint, tipos, import-linter, testes) em push na `dev` e PRs |
+| Bloqueios | M0.5 precisa de repositório remoto no GitHub para rodar o CI de verdade (publicar = só com pedido explícito, §0) |
 | Último portão aprovado | — |
 | Versão | 0.0.0 (nada publicado) |
 | Bugs abertos | 0 |
@@ -132,7 +132,8 @@ de contabilidade. **Sincronização desktop ↔ web** não está no escopo inici
 
 - **Ferramentas de qualidade (M0.3)**, no `[dependency-groups] dev` do `pyproject.toml` e repetidas no
   `.pre-commit-config.yaml`: ruff 0.17.3, mypy 2.4.0, pytest 9.1.1, pytest-cov 7.1.0, coverage 7.17.0,
-  hypothesis 6.170.12, pre-commit 4.7.0; ganchos pre-commit-hooks v6.0.0 e ruff-pre-commit v0.17.3.
+  hypothesis 6.170.12, pre-commit 4.7.0, import-linter 2.15 (M0.4); ganchos pre-commit-hooks v6.0.0 e
+  ruff-pre-commit v0.17.3.
 - **Sem GNU make no Windows (fato, 2026-10-27):** o único `make` no PATH é o do Embarcadero RAD Studio, com sintaxe
   incompatível. Por isso o comando oficial é `python tools/check.py`; o `Makefile` é só atalho para Linux/CI.
 - *Pendente:* dependências **transitivas** ainda não têm lock (ex.: `darkdetect`, `asgiref`). Avaliar lockfile
@@ -201,6 +202,10 @@ StocKit/
 - `adapters` importam `core.ports`/`core.domain`; nunca `apps`.
 - `apps` importam `core.services` e um adaptador; nunca outro `app`.
 - Views DRF e presenters Tkinter **não contêm regra**: chamam serviço, traduzem erro de domínio, formatam saída.
+- Dentro do `core`: `services` → `ports` → `domain` (contrato `core-camadas`, M0.4).
+- **Estado dos contratos (M0.4):** ativos `core-puro` e `core-camadas`. `adapters-sem-apps` e `apps-independentes`
+  estão escritos e comentados no `pyproject.toml`; **ativar** ao criar `adapters` (M1.5) e `apps` (M3.1), incluindo os
+  pacotes em `root_packages`. Limitação conhecida: imports dinâmicos (`importlib`, `__import__`) não são detectados.
 
 ### 6.3 Persistência dupla e como mantê-la honesta
 Há dois adaptadores (SQLite puro e Django ORM) para as mesmas portas. A defesa é a **suíte de contrato**: os mesmos testes
@@ -343,7 +348,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | M0.1 | Criar repositório (pasta definida em D-06), `git init`, branches `main`/`dev`, `.gitignore`, LICENSE (D-05), README mínimo; **mover este arquivo para a raiz** | P | ✅ |
 | M0.2 | `pyproject.toml` com `core` instalável em modo editável; venv; **fixar versões** de Python/Node/Django e registrar em §5.1 | P | ✅ |
 | M0.3 | Ferramentas: ruff, mypy (estrito no `core`), pytest, pytest-cov, hypothesis, pre-commit; alvo único `make check` (ou script equivalente no Windows) | P | ✅ |
-| M0.4 | Contratos do `import-linter` (`core` não importa adaptadores/apps/frameworks) | P | ⬜ |
+| M0.4 | Contratos do `import-linter` (`core` não importa adaptadores/apps/frameworks) | P | ✅ |
 | M0.5 | CI no GitHub Actions: lint, tipos, testes, import-linter em push na `dev` e PRs | P | ⬜ |
 | M0.6 | `docs/`: estrutura, glossário (§20), `requirements.md` (a partir de §8), template de ADR e **ADRs 001–005** (núcleo hexagonal; SQLite no desktop; Django ORM na web; livro de movimentações; campos personalizados em JSON) | M | ⬜ |
 | M0.7 | Diagramas C4 níveis 1–2 em Mermaid (`docs/c4/`) | P | ⬜ |
@@ -654,6 +659,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M0.4 concluída.** Feito: import-linter 2.15 no grupo `dev`, no `tools/check.py` (via executável do venv, pois o pacote não roda com `python -m`) e no pre-commit. Contratos: `core-puro` (forbidden: adapters, apps, tools, tests, Tkinter/CustomTkinter, Django/DRF/drf-spectacular, sqlite3, reportlab, qrcode, barcode, Faker, PyInstaller, socket/ssl/http/urllib/subprocess/multiprocessing, pytest/hypothesis) e `core-camadas` (layers: services → ports → domain). **Verificado antes de escrever:** com `include_external_packages`, o import-linter detecta módulos da biblioteca padrão e aceita proibir pacotes que ainda não existem. **Testes negativos** (arquivo temporário em `core/domain`, removido depois): `import tkinter`, `from django.db import models`, `import core.services` dentro do domain e `from adapters.sqlite import repo` — cada um quebrou o contrato certo (saída 1); `tools/check.py` também falhou. Check de volta ao verde (2,5 s). Ajuste extra: `tools/check.py` força UTF-8 nas ferramentas (acentos saíam embaralhados com a saída redirecionada no Windows). Limitação registrada em §6.2: imports dinâmicos não são detectados. |
 | 2026-10-27 | **M0.3 concluída.** Feito: ferramentas em `[dependency-groups] dev` com versões exatas (verificadas no PyPI); configuração de ruff (inclui `DTZ` para datas sem fuso e `S` de segurança), mypy `strict` (testes/scripts podem ter funções sem anotação), pytest (`--strict-markers`, warnings viram erro, `importlib`), cobertura com ramos e mínimo de 90% no `core`; `tests/conftest.py` com perfis do hypothesis `dev`/`ci`; teste de pacote (`core` e subcamadas importáveis, `py.typed` presente); `tools/check.py` + `Makefile`; `.pre-commit-config.yaml` (higiene, ruff, mypy e pytest) instalado no `.git/hooks`. Resultado: check verde (8,5 s) e `pre-commit run --all-files` verde. **Teste negativo:** um arquivo proposital com import sem uso e função sem tipo fez falhar ruff, mypy e cobertura, com código de saída 1; arquivo removido em seguida. Causa da escolha do script Python: não há GNU make no Windows (o `make` do PATH é do Embarcadero). Lição: a instalação pelo PyPI teve timeouts de leitura com novas tentativas; terminou, mas a rede pode atrasar a configuração em máquina limpa (TP-M0-01). |
 | 2026-10-27 | **M0.2 concluída.** Feito: verificadas no PyPI as versões e o suporte a Python 3.14 de Django, DRF, PyInstaller, CustomTkinter, setuptools e pip; CustomTkinter 6.0.0 testado de verdade num venv descartável (abre janela no 3.14.3). Criados `pyproject.toml` (distribuição `stockit`, `core` sem dependências, extras `desktop`/`web`/`package` com versões exatas), esqueleto `core/{domain,services,ports}` com `py.typed`, `.python-version` (3.14) e `.nvmrc` (24). Venv `.venv` com 3.14.3, `pip install -e .` ok; `import core` de fora do repositório resolve para o código-fonte (editável confirmado). README ganhou o passo a passo de setup. Decisões: D-03 = CustomTkinter (usuário); D-04 = Python 3.14, Node 24 LTS, Django 5.2.18 LTS. Lição: a versão mais nova do Django (6.1.2) não é LTS; o documento pede LTS, por isso 5.2. Pendência registrada em §5.1: lock de dependências transitivas. |
 | 2026-10-27 | **M0.1 concluída.** Feito: `git init` na pasta definida (D-06), `.gitignore` (Python, Node, Django, bancos `.db`/`.sqlite3`, `.env`, caches de ferramentas), `.gitattributes` (LF no repo, CRLF em `.bat`/`.cmd`/`.ps1`), LICENSE MIT, README mínimo, commit inicial na `main` e branch `dev` criada a partir dela (trabalho segue na `dev`). Este arquivo já estava na raiz da pasta; atualizado o nome para **StocKit**. Resultado: ok, nada publicado (sem remoto, sem push). Decisões: D-01 = StocKit (escolha do usuário); D-05 = MIT (usuário sem preferência → recomendação do documento); D-06 = pasta atual. Lição: o titular do copyright na LICENSE usa o usuário GitHub `KaueChristian` (§2) — *hipótese* de que é o nome desejado; ajustar se não for. |
@@ -744,6 +750,8 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Comando de qualidade = `python tools/check.py`; `make check` só chama o script | Funciona igual no Windows (sem GNU make) e no CI |
 | 2026-10-27 | Ferramentas de dev em `[dependency-groups]` (PEP 735), não em extras | Não fazem parte do pacote publicado; `pip install --group dev` (pip ≥ 25.1) |
 | 2026-10-27 | Cobertura mínima de 90% já ativa desde a M0 | Mais simples ligar agora do que lembrar de ligar na M1 (RNF-001) |
+| 2026-10-27 | Contrato extra `core-camadas` (services → ports → domain) | Consequência direta do hexagonal (§6.1); barato de ligar agora, caro de consertar depois |
+| 2026-10-27 | `core` também proíbe rede, subprocessos e bibliotecas de teste | Regra "nada de I/O" do §0; `os`/`pathlib` ficaram liberados por enquanto (reavaliar na M1.12, loader de perfis) |
 | 2026-10-27 | pre-commit roda mypy e pytest em ambientes isolados do próprio pre-commit | Funciona sem venv ativo; o `core` não tem dependências, então o ambiente isolado basta. Custo: versões repetidas em dois arquivos |
 
 **Índice de ADRs** (`docs/adr/`, preencher na M0.6): ADR-001 núcleo hexagonal · ADR-002 SQLite no desktop · ADR-003 Django ORM na web · ADR-004 livro de movimentações · ADR-005 campos personalizados em JSON.

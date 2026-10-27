@@ -34,6 +34,13 @@ repos:
         additional_dependencies: [mypy==2.4.0, pytest==9.1.1, hypothesis==6.170.12]
         types_or: [python, toml]
         pass_filenames: false
+      - id: import-linter
+        name: import-linter
+        entry: lint-imports
+        language: python
+        additional_dependencies: [import-linter==2.15]
+        types_or: [python, toml]
+        pass_filenames: false
       - id: pytest
         name: pytest
         entry: pytest -q -p no:cacheprovider

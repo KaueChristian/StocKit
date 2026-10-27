@@ -6,25 +6,41 @@ Roda todas as etapas mesmo que uma falhe, mostra um resumo e sai com código 1 s
 Definição de pronto (PROJECT_CONTEXT.md §9.3.6): este comando precisa estar verde.
 """
 
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS = Path(sys.executable).parent  # pasta de executáveis do venv em uso
+
+
+def module(*args: str) -> list[str]:
+    """Roda uma ferramenta como ``python -m`` com o Python do venv."""
+    return [sys.executable, "-m", *args]
+
+
+def script(name: str, *args: str) -> list[str]:
+    """Roda um executável instalado no venv (para ferramentas sem ``__main__``)."""
+    return [str(SCRIPTS / name), *args]
+
 
 STEPS: list[tuple[str, list[str]]] = [
-    ("ruff (lint)", ["ruff", "check", "."]),
-    ("ruff (formato)", ["ruff", "format", "--check", "."]),
-    ("mypy", ["mypy"]),
-    ("pytest + cobertura", ["pytest", "--cov", "--cov-report=term-missing"]),
+    ("ruff (lint)", module("ruff", "check", ".")),
+    ("ruff (formato)", module("ruff", "format", "--check", ".")),
+    ("mypy", module("mypy")),
+    ("import-linter", script("lint-imports")),
+    ("pytest + cobertura", module("pytest", "--cov", "--cov-report=term-missing")),
 ]
 
 
-def run_step(name: str, args: list[str]) -> tuple[bool, float]:
+def run_step(name: str, command: list[str]) -> tuple[bool, float]:
     print(f"\n=== {name} ===", flush=True)
     start = time.perf_counter()
-    result = subprocess.run([sys.executable, "-m", *args], cwd=ROOT, check=False)
+    # UTF-8 forçado: sem isso, acentos saem embaralhados quando a saída é redirecionada no Windows.
+    env = os.environ | {"PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+    result = subprocess.run(command, cwd=ROOT, env=env, check=False)
     return result.returncode == 0, time.perf_counter() - start
 
 
