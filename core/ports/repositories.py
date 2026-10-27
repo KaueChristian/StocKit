@@ -19,9 +19,11 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Protocol
 
-from core.domain.catalog import Category, Item
+from core.domain.catalog import Category, Item, ItemKind
+from core.domain.custom_fields import CustomFieldDefinition
 from core.domain.ids import (
     CategoryId,
+    CustomFieldId,
     ItemId,
     LocationId,
     LotId,
@@ -79,6 +81,16 @@ class LotRepository(Repository[Lot, LotId], Protocol):
 
     def list_for_item(self, item_id: ItemId) -> Sequence[Lot]:
         """Lotes do item em ordem FEFO (``fefo_order``)."""
+        ...
+
+
+class CustomFieldRepository(Repository[CustomFieldDefinition, CustomFieldId], Protocol):
+    """Definições de campos personalizados. Chave única (``ConflictError``). ``list`` por chave."""
+
+    def find_by_key(self, key: str) -> CustomFieldDefinition | None: ...
+
+    def list_for_kind(self, kind: ItemKind) -> Sequence[CustomFieldDefinition]:
+        """Definições que se aplicam a itens do tipo ``kind``, por chave."""
         ...
 
 

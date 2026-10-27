@@ -1,6 +1,7 @@
 """Itens e categorias (M1.2, RF-001)."""
 
 from dataclasses import FrozenInstanceError, replace
+from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
@@ -181,3 +182,31 @@ def test_serialized_item_cannot_track_lots() -> None:
     with pytest.raises(ValidationError, match="número de série") as error:
         make_item(kind=ItemKind.SERIALIZED, tracks_lots=True)
     assert error.value.field == "tracks_lots"
+
+
+@pytest.mark.req("RF-004")
+def test_custom_fields_shape_is_checked_and_frozen() -> None:
+    source = {"temperatura": Decimal(4), "aberto": True, "nota": "x", "dia": date(2026, 1, 1)}
+    item = make_item(custom_fields=source)
+    source["temperatura"] = Decimal(9)
+    assert item.custom_fields["temperatura"] == Decimal(4), "cópia própria"
+    with pytest.raises(TypeError):
+        item.custom_fields["nota"] = "y"  # type: ignore[index]
+    assert make_item().custom_fields == {}
+
+
+@pytest.mark.req("RF-004")
+@pytest.mark.parametrize(
+    ("value", "field"),
+    [
+        ([("a", 1)], "custom_fields"),
+        ({"Temperatura": Decimal(1)}, "custom_fields"),
+        ({"temperatura": 4.5}, "custom_fields.temperatura"),
+        ({"temperatura": None}, "custom_fields.temperatura"),
+        ({"lista": [1, 2]}, "custom_fields.lista"),
+    ],
+)
+def test_custom_fields_with_wrong_shape_are_refused(value: object, field: str) -> None:
+    with pytest.raises(ValidationError) as error:
+        make_item(custom_fields=value)
+    assert error.value.field == field

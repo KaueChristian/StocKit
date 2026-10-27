@@ -16,6 +16,7 @@ from typing import Protocol, Self
 
 from core.ports.repositories import (
     CategoryRepository,
+    CustomFieldRepository,
     ItemRepository,
     LocationRepository,
     LotRepository,
@@ -39,6 +40,9 @@ class UnitOfWork(Protocol):
 
     @property
     def lots(self) -> LotRepository: ...
+
+    @property
+    def custom_fields(self) -> CustomFieldRepository: ...
 
     @property
     def movements(self) -> MovementRepository: ...

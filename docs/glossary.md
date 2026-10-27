@@ -31,7 +31,7 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Registro de movimentação** | Serviço único que lança entrada, saída, ajuste, perda e devolução: confere cadastros, converte para a unidade base e aplica a política | `record_movement` |
 | **Data de ocorrência / de registro** | Quando o fato aconteceu / quando foi lançado no sistema; lançamento retroativo tem as duas diferentes | `occurred_at`, `recorded_at` |
 | **FEFO** | *First Expired, First Out*: sai primeiro o lote que vence primeiro. Saída sem lote informado é repartida entre lotes nessa ordem; lote vencido fica de fora | `fefo_order`, `record_movement` |
-| **Campo personalizado** | Campo extra definido por tipo de item (nome, tipo, obrigatório, validação), guardado em JSON | — |
+| **Campo personalizado** | Campo extra definido para tipos de item (chave, rótulo, tipo — texto, número, data, sim/não, lista —, obrigatório, regras); valores no item, em JSON com número como texto decimal (ADR-005) | `CustomFieldDefinition`, `Item.custom_fields`, `validate_custom_fields` |
 | **Perfil** | JSON que pré-configura rótulos, campos e unidades de um tipo de negócio | — |
 | **Contagem / inventário cíclico** | Conferência física: contado × sistema → divergência → movimentos de ajuste | — |
 | **Custo médio móvel** | Valoração em que cada entrada recalcula o custo médio do item (D-07) | — |

@@ -12,9 +12,11 @@ from typing import Self, get_protocol_members
 
 import pytest
 
-from core.domain.catalog import Category, Item
+from core.domain.catalog import Category, Item, ItemKind
+from core.domain.custom_fields import CustomFieldDefinition
 from core.domain.ids import (
     CategoryId,
+    CustomFieldId,
     ItemId,
     LocationId,
     LotId,
@@ -29,6 +31,7 @@ from core.domain.party import Party
 from core.ports.clock import Clock
 from core.ports.repositories import (
     CategoryRepository,
+    CustomFieldRepository,
     ItemRepository,
     LocationRepository,
     LotRepository,
@@ -56,8 +59,9 @@ def test_ledger_only_appends() -> None:
         (LocationRepository, set()),
         (PartyRepository, set()),
         (LotRepository, {"find_by_code", "list_for_item"}),
+        (CustomFieldRepository, {"find_by_key", "list_for_kind"}),
     ],
-    ids=["item", "categoria", "local", "parte", "lote"],
+    ids=["item", "categoria", "local", "parte", "lote", "campo"],
 )
 def test_registry_ports_have_crud_without_delete(port: type, extra: set[str]) -> None:
     """Cadastro se inativa, não se apaga: o histórico de movimentações aponta para ele."""
@@ -73,6 +77,7 @@ def test_unit_of_work_exposes_every_repository_and_the_transaction() -> None:
         "locations",
         "parties",
         "lots",
+        "custom_fields",
         "movements",
         "__enter__",
         "__exit__",
@@ -113,6 +118,14 @@ class _Lots(_Registry[Lot, LotId]):
         return ()
 
 
+class _Fields(_Registry[CustomFieldDefinition, CustomFieldId]):
+    def find_by_key(self, key: str) -> CustomFieldDefinition | None:
+        return None
+
+    def list_for_kind(self, kind: ItemKind) -> Sequence[CustomFieldDefinition]:
+        return ()
+
+
 class _Movements:
     def append(self, movement: Movement) -> None: ...
 
@@ -139,6 +152,7 @@ class _Uow:
     locations = _Registry[Location, LocationId]()
     parties = _Registry[Party, PartyId]()
     lots = _Lots()
+    custom_fields = _Fields()
     movements = _Movements()
     committed = False
 

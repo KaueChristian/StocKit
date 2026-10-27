@@ -1,8 +1,12 @@
 """Catálogo: itens e categorias (RF-001)."""
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
+from datetime import date
+from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Self
 from uuid import UUID
 
@@ -13,6 +17,7 @@ from core.domain.quantity import Dimension, UnitOfMeasure
 
 SKU_MAX_LENGTH = 64
 _SKU_PATTERN = re.compile(r"[A-Z0-9][A-Z0-9._/-]*")
+_CUSTOM_KEY = re.compile(r"[a-z][a-z0-9_]{0,39}")
 
 
 class ItemKind(StrEnum):
@@ -64,10 +69,12 @@ class Item(Entity):
     tracks_lots: bool = False
     tracks_expiry: bool = False
     active: bool = True
+    custom_fields: Mapping[str, object] = field(default_factory=lambda: MappingProxyType({}))
     id: ItemId = field(default_factory=new_item_id)
 
     def __post_init__(self) -> None:
         set_field(self, "sku", normalize_sku(self.sku))
+        set_field(self, "custom_fields", _freeze_custom_fields(self.custom_fields))
         set_field(self, "name", clean_text(self.name, "name", "nome do item", max_length=200))
         require_type(self.kind, ItemKind, "kind", "tipo de item")
         require_type(self.base_unit, UnitOfMeasure, "base_unit", "unidade base")
@@ -101,6 +108,21 @@ class Item(Entity):
 
     def activated(self) -> Self:
         return replace(self, active=True)
+
+
+def _freeze_custom_fields(values: object) -> Mapping[str, object]:
+    """Só a forma: mapa de chave válida para texto, número, data ou sim/não. Conferir contra as
+    definições (tipo certo, obrigatórios, regras) é do serviço, que conhece as definições."""
+    if not isinstance(values, Mapping):
+        raise ValidationError("custom_fields", "campos personalizados precisam ser um mapa")
+    frozen: dict[str, object] = {}
+    for key, value in values.items():
+        if not isinstance(key, str) or not _CUSTOM_KEY.fullmatch(key):
+            raise ValidationError("custom_fields", f"chave de campo inválida: {key!r}")
+        if isinstance(value, float) or not isinstance(value, str | int | Decimal | date):
+            raise ValidationError(f"custom_fields.{key}", f"valor de tipo não aceito: {value!r}")
+        frozen[key] = value
+    return MappingProxyType(frozen)
 
 
 def _is_single_count_unit(unit: UnitOfMeasure) -> bool:

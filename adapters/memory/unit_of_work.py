@@ -10,6 +10,7 @@ from typing import Self
 
 from adapters.memory.repositories import (
     MemoryCategoryRepository,
+    MemoryCustomFieldRepository,
     MemoryItemRepository,
     MemoryLocationRepository,
     MemoryLotRepository,
@@ -78,6 +79,10 @@ class MemoryUnitOfWork:
     @property
     def lots(self) -> MemoryLotRepository:
         return MemoryLotRepository(self._require_open().lots)
+
+    @property
+    def custom_fields(self) -> MemoryCustomFieldRepository:
+        return MemoryCustomFieldRepository(self._require_open().custom_fields)
 
     @property
     def movements(self) -> MemoryMovementRepository:

@@ -46,3 +46,24 @@ def test_lots_follow_the_unit_of_work() -> None:
         uow.lots.add(Lot(item_id=A, code="L1"))
     with uow:
         assert uow.lots.list() == ()
+
+
+def test_custom_field_definitions_by_key_and_kind() -> None:
+    from core.domain.catalog import ItemKind
+    from core.domain.custom_fields import CustomFieldDefinition, CustomFieldType
+
+    def define(key: str, *kinds: ItemKind) -> CustomFieldDefinition:
+        return CustomFieldDefinition(
+            key=key, label=key, field_type=CustomFieldType.TEXT, kinds=frozenset(kinds)
+        )
+
+    with MemoryUnitOfWork() as uow:
+        b, a = define("b", ItemKind.ASSET), define("a", ItemKind.ASSET, ItemKind.CONSUMABLE)
+        uow.custom_fields.add(b)
+        uow.custom_fields.add(a)
+        assert uow.custom_fields.list() == (a, b)
+        assert uow.custom_fields.list_for_kind(ItemKind.CONSUMABLE) == (a,)
+        assert uow.custom_fields.find_by_key("b") == b
+        assert uow.custom_fields.find_by_key("c") is None
+        with pytest.raises(ConflictError, match="chave b"):
+            uow.custom_fields.add(define("b", ItemKind.RESALE))

@@ -9,11 +9,13 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from core.domain.catalog import Category, Item
+from core.domain.catalog import Category, Item, ItemKind
+from core.domain.custom_fields import CustomFieldDefinition
 from core.domain.entity import Entity
 from core.domain.errors import ConflictError, NotFoundError
 from core.domain.ids import (
     CategoryId,
+    CustomFieldId,
     ItemId,
     LocationId,
     LotId,
@@ -37,6 +39,7 @@ class MemoryState:
     locations: dict[LocationId, Location] = field(default_factory=dict)
     parties: dict[PartyId, Party] = field(default_factory=dict)
     lots: dict[LotId, Lot] = field(default_factory=dict)
+    custom_fields: dict[CustomFieldId, CustomFieldDefinition] = field(default_factory=dict)
     movements: list[Movement] = field(default_factory=list)
 
     def copy(self) -> MemoryState:
@@ -46,6 +49,7 @@ class MemoryState:
             locations=dict(self.locations),
             parties=dict(self.parties),
             lots=dict(self.lots),
+            custom_fields=dict(self.custom_fields),
             movements=list(self.movements),
         )
 
@@ -143,6 +147,22 @@ class MemoryLotRepository(_Registry[Lot, LotId]):
         other = self.find_by_code(entity.item_id, entity.code)
         if other is not None and other.id != entity.id:
             raise ConflictError(f"o item já tem um lote com o código {entity.code}")
+
+
+class MemoryCustomFieldRepository(_Registry[CustomFieldDefinition, CustomFieldId]):
+    def __init__(self, data: dict[CustomFieldId, CustomFieldDefinition]) -> None:
+        super().__init__(data, "campo personalizado", lambda d: d.key)
+
+    def find_by_key(self, key: str) -> CustomFieldDefinition | None:
+        return next((d for d in self._data.values() if d.key == key), None)
+
+    def list_for_kind(self, kind: ItemKind) -> Sequence[CustomFieldDefinition]:
+        return tuple(d for d in self.list() if kind in d.kinds)
+
+    def _check_unique(self, entity: CustomFieldDefinition) -> None:
+        other = self.find_by_key(entity.key)
+        if other is not None and other.id != entity.id:
+            raise ConflictError(f"já existe um campo com a chave {entity.key}")
 
 
 class MemoryMovementRepository:

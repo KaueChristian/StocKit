@@ -15,6 +15,7 @@ PartyId = NewType("PartyId", UUID)
 LotId = NewType("LotId", UUID)
 MovementId = NewType("MovementId", UUID)
 TransferId = NewType("TransferId", UUID)
+CustomFieldId = NewType("CustomFieldId", UUID)
 
 
 def new_item_id() -> ItemId:
@@ -43,3 +44,7 @@ def new_movement_id() -> MovementId:
 
 def new_transfer_id() -> TransferId:
     return TransferId(uuid4())
+
+
+def new_custom_field_id() -> CustomFieldId:
+    return CustomFieldId(uuid4())
