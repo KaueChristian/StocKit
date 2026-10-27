@@ -13,6 +13,7 @@ As funções de leitura e validação também são usadas por ``tests/conftest.p
 
 import argparse
 import contextlib
+import io
 import json
 import re
 import shutil
@@ -189,6 +190,13 @@ def current_commit() -> str:
     return result.stdout.strip() or "desconhecido"
 
 
+def write_stdout(text: str) -> None:
+    """Imprime em UTF-8 mesmo quando o stdout do Windows está em cp1252 (saída redirecionada)."""
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdout.write(text)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument(
@@ -217,7 +225,7 @@ def main(argv: list[str] | None = None) -> int:
         args.output.write_text(text, encoding="utf-8", newline="\n")
         print(f"matriz gravada em {args.output}", file=sys.stderr)
     else:
-        sys.stdout.write(text)
+        write_stdout(text)
 
     return 1 if any(r.result == "falhando" for r in rows) else 0
 

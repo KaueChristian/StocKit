@@ -663,6 +663,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | ID | Data | Milestone/Etapa | Descrição e passos | Severidade | Causa raiz (fato/hipótese) | Status | Correção / teste de regressão |
 |---|---|---|---|---|---|---|---|
 | BUG-01 | 2026-10-27 | M0 / portão (TP-M0-03) | `python tools/check.py` quebra com `FileNotFoundError` na etapa import-linter quando roda num Python **sem venv** no Windows (caso do runner `windows-latest`). Passos: instalar o projeto no Python do sistema, rodar o check | Alta (CI do Windows sempre vermelho) | **Fato:** `SCRIPTS = Path(sys.executable).parent`; fora de venv, no Windows, os scripts ficam em `<python>\Scripts\` (log do run 40553841261) | CORRIGIDO | `4d6867b`: `sysconfig.get_path("scripts")` + ferramenta ausente vira falha no resumo; `tests/tools/test_check.py`; CI verde no Windows (run 40554318491) |
+| BUG-02 | 2026-10-27 | M1.1 (achado ao conferir a matriz) | `python tools/traceability.py > m.md` sai com `UnicodeEncodeError` no Windows: com stdout redirecionado, o Python usa cp1252, que não tem o "≥" do texto da RNF-001. Com `--output` funciona | Baixa (o portão M0 usou `--output`; o README ensina o redirecionamento) | **Fato:** traceback aponta `sys.stdout.write`; reproduzido com `PYTHONIOENCODING=cp1252` | CORRIGIDO | `write_stdout` reconfigura o stdout para UTF-8; teste `test_write_stdout_survives_a_cp1252_console` (falha sem a correção) |
 
 ---
 

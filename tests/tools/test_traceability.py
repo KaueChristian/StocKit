@@ -1,10 +1,14 @@
 """Testes do gerador da matriz de rastreabilidade (tools/traceability.py)."""
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 from tools.traceability import (
+    ROOT,
     Requirement,
     Row,
     build_rows,
@@ -98,3 +102,14 @@ def test_render_json_is_parseable() -> None:
         "result": "sem teste",
         "tests": {},
     }
+
+
+def test_write_stdout_survives_a_cp1252_console() -> None:
+    """Regressão do BUG-02: matriz com "≥" redirecionada para arquivo no Windows quebrava."""
+    code = "from tools.traceability import write_stdout; write_stdout('cobertura ≥ 90%')"
+    env = os.environ | {"PYTHONIOENCODING": "cp1252", "PYTHONUTF8": "0"}
+    result = subprocess.run(
+        [sys.executable, "-c", code], cwd=ROOT, env=env, capture_output=True, check=False
+    )
+    assert result.returncode == 0, result.stderr.decode(errors="replace")
+    assert result.stdout.decode("utf-8").strip() == "cobertura ≥ 90%"
