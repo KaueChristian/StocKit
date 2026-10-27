@@ -46,6 +46,16 @@ Os contratos ficam no `pyproject.toml`, seção `[tool.importlinter]`:
 
 Imports dinâmicos (`importlib.import_module("tkinter")`) **não** são detectados; a revisão de código cobre esse caso.
 
+### Integração contínua
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em push e PR nas branches `dev` e `main`:
+
+- **check** (Ubuntu e Windows): instala o projeto do zero e roda `python tools/check.py` com o hypothesis no perfil `ci`.
+- **higiene** (Ubuntu): ganchos do pre-commit que o check não cobre (espaços, fim de arquivo, YAML/TOML, schema dos
+  workflows).
+
+As actions são fixadas por hash de commit.
+
 Os testes com hypothesis usam o perfil `dev` (rápido) por padrão; `HYPOTHESIS_PROFILE=ci` deixa a execução
 determinística e com mais exemplos.
 Extras com versões fixas, instalados quando o milestone pedir: `.[desktop]` (CustomTkinter), `.[web]` (Django LTS + DRF)
