@@ -12,6 +12,9 @@ ItemId = NewType("ItemId", UUID)
 CategoryId = NewType("CategoryId", UUID)
 LocationId = NewType("LocationId", UUID)
 PartyId = NewType("PartyId", UUID)
+LotId = NewType("LotId", UUID)
+MovementId = NewType("MovementId", UUID)
+TransferId = NewType("TransferId", UUID)
 
 
 def new_item_id() -> ItemId:
@@ -28,3 +31,15 @@ def new_location_id() -> LocationId:
 
 def new_party_id() -> PartyId:
     return PartyId(uuid4())
+
+
+def new_lot_id() -> LotId:
+    return LotId(uuid4())
+
+
+def new_movement_id() -> MovementId:
+    return MovementId(uuid4())
+
+
+def new_transfer_id() -> TransferId:
+    return TransferId(uuid4())

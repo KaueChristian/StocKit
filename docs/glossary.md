@@ -19,12 +19,13 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Parte** | Fornecedor, cliente ou setor; pode ter mais de um papel; o rótulo do papel vem do perfil | `Party`, `PartyRole` |
 | **Lote** | Grupo de unidades de um item com código e validade; base do FEFO | — |
 | **Item serializado** | Item controlado por unidade, cada uma com número de série único; unidade base de contagem com fator 1 | `ItemKind.SERIALIZED` |
-| **Movimentação** | Registro imutável de entrada, saída, transferência, ajuste, perda ou devolução | — |
+| **Movimentação** | Registro imutável de entrada, saída, transferência, ajuste, perda ou devolução; quantidade sempre positiva, o tipo dá a direção | `Movement` |
+| **Tipo de movimentação** | Entrada, saída, transferência (saída/entrada), ajuste (para mais/para menos), perda, devolução de cliente, devolução a fornecedor | `MovementKind` |
 | **Livro (ledger)** | Sequência de movimentações da qual o saldo é derivado | — |
 | **Saldo** | Soma assinada das movimentações de (item, local, lote); nunca é armazenado como verdade | — |
 | **Saldo em uma data** | Saldo considerando só as movimentações ocorridas até aquele instante | — |
-| **Ajuste** | Movimentação que corrige o saldo (nunca se edita uma movimentação antiga) | — |
-| **Transferência** | Par atômico saída + entrada entre dois locais; conserva a quantidade total | — |
+| **Ajuste** | Movimentação que corrige o saldo (nunca se edita uma movimentação antiga); exige motivo | `ADJUSTMENT_IN`, `ADJUSTMENT_OUT` |
+| **Transferência** | Par atômico saída + entrada entre dois locais, ligado por `transfer_id`; conserva a quantidade total | `make_transfer`, `check_transfer_pair` |
 | **Política de saldo negativo** | Configuração que proíbe (padrão) ou permite saída acima do saldo | — |
 | **FEFO** | *First Expired, First Out*: sai primeiro o lote que vence primeiro | — |
 | **Campo personalizado** | Campo extra definido por tipo de item (nome, tipo, obrigatório, validação), guardado em JSON | — |
