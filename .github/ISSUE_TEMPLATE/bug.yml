@@ -1,0 +1,60 @@
+name: Bug
+description: Algo se comporta diferente do esperado (vira uma linha em PROJECT_CONTEXT.md §15)
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de corrigir, a causa raiz precisa estar comprovada (fato). Hipótese não vira correção (§15).
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que aconteceu
+      description: Comportamento observado e comportamento esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos para reproduzir
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: dropdown
+    id: plataforma
+    attributes:
+      label: Plataforma
+      options:
+        - Núcleo (core)
+        - Desktop
+        - Web (API)
+        - Web (frontend)
+        - Ferramentas / CI
+    validations:
+      required: true
+  - type: dropdown
+    id: severidade
+    attributes:
+      label: Severidade
+      description: Saldo errado é sempre crítica (§4.1).
+      options:
+        - Crítica (saldo/dados errados ou perda de dados)
+        - Alta (fluxo principal bloqueado)
+        - Média (contorno existe)
+        - Baixa (cosmético)
+    validations:
+      required: true
+  - type: input
+    id: etapa
+    attributes:
+      label: Milestone/etapa onde apareceu
+      placeholder: "ex.: M3.4"
+  - type: textarea
+    id: ambiente
+    attributes:
+      label: Ambiente e evidência
+      description: Versão/commit, sistema operacional, logs ou prints.

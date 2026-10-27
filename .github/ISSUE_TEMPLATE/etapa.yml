@@ -1,0 +1,43 @@
+name: Etapa ou melhoria
+description: Trabalho ligado a uma etapa do roadmap (PROJECT_CONTEXT.md §10) ou proposta nova
+title: "[M?.?] "
+labels: [etapa]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de propor algo novo, confira os planos descartados (PROJECT_CONTEXT.md §16).
+        Reabrir uma ideia descartada exige evidência nova.
+  - type: input
+    id: etapa
+    attributes:
+      label: ID da etapa
+      description: Deixe vazio se for proposta ainda fora do roadmap.
+      placeholder: "ex.: M1.6"
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Objetivo
+      description: O que deve ficar verdadeiro quando a etapa terminar.
+    validations:
+      required: true
+  - type: input
+    id: requisitos
+    attributes:
+      label: Requisitos ligados
+      description: IDs de docs/requirements.md.
+      placeholder: "ex.: RF-005, RF-007"
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Como saber que está pronto
+      description: Testes, casos de portão (TP-M...) ou medições esperadas.
+    validations:
+      required: true
+  - type: checkboxes
+    id: verificacoes
+    attributes:
+      label: Verificações
+      options:
+        - label: Conferi que a ideia não está em PROJECT_CONTEXT.md §16 (descartados)
+          required: true

@@ -37,7 +37,12 @@ def read(path: Path) -> str:
 
 
 def markdown_sources() -> list[Path]:
-    return [CONTEXT, *sorted(DOCS.rglob("*.md"))]
+    extras = [
+        ROOT / "README.md",
+        ROOT / "CONTRIBUTING.md",
+        ROOT / ".github" / "pull_request_template.md",
+    ]
+    return [CONTEXT, *extras, *sorted(DOCS.rglob("*.md"))]
 
 
 def ids_defined_in_table(text: str, pattern: re.Pattern[str]) -> list[str]:
@@ -172,3 +177,9 @@ def test_c4_index_links_every_level() -> None:
     index = read(C4_DIR / "README.md")
     linked = set(re.findall(r"\]\((\d{2}-[^)]+\.md)\)", index))
     assert linked == {p.name for p in c4_files()}
+
+
+def test_pr_template_carries_definition_of_done() -> None:
+    template = read(ROOT / ".github" / "pull_request_template.md")
+    for item in ["tools/check.py", "@pytest.mark.req", "§1", "§10", "§14", "Conventional Commits"]:
+        assert item in template, f"checklist do PR sem: {item}"
