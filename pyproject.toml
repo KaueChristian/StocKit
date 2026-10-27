@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stockit"
+version = "0.0.0"
+description = "Gerenciador de estoque universal: núcleo Python puro com desktop (Tkinter + SQLite) e web (Django + React)."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Kaue Christian" }]
+# Versão fixada na M0.2 (D-04). Subir de versão é decisão registrada em PROJECT_CONTEXT.md §19.
+requires-python = ">=3.14,<3.15"
+# O core é Python puro: nenhuma dependência de runtime (PROJECT_CONTEXT.md §0, §6.2).
+dependencies = []
+
+# Versões das plataformas fixadas na M0.2 (D-03, D-04). Só são instaladas nos milestones que as usam.
+[project.optional-dependencies]
+desktop = ["customtkinter==6.0.0"]                              # M3
+web = ["Django==5.2.18", "djangorestframework==3.18.3"]         # M5 (Django 5.2 = LTS)
+package = ["pyinstaller==6.22.3"]                               # M3.12
+
+[tool.setuptools.packages.find]
+include = ["core*"]
+
+[tool.setuptools.package-data]
+core = ["py.typed"]

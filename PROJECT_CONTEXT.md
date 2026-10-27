@@ -52,9 +52,9 @@
 | Campo | Valor |
 |---|---|
 | Milestone aberto | **M0 — Fundação** |
-| Última etapa concluída | **M0.1** — repositório git criado (`main`/`dev`), `.gitignore`, `.gitattributes`, LICENSE MIT, README (2026-10-27) |
-| Próxima etapa | **M0.2** — `pyproject.toml`, `core` instalável em modo editável, venv, fixar versões |
-| Bloqueios | Decisões D-03 e D-04 (§18) precisam de resposta na M0.2 |
+| Última etapa concluída | **M0.2** — `pyproject.toml`, `core` instalável em modo editável, venv, versões fixadas (2026-10-27) |
+| Próxima etapa | **M0.3** — ruff, mypy (estrito no `core`), pytest, pytest-cov, hypothesis, pre-commit, `make check` |
+| Bloqueios | Nenhum |
 | Último portão aprovado | — |
 | Versão | 0.0.0 (nada publicado) |
 | Bugs abertos | 0 |
@@ -114,10 +114,25 @@ de contabilidade. **Sincronização desktop ↔ web** não está no escopo inici
 
 ### 5.1 Máquina de desenvolvimento
 - Windows 11, PowerShell/Git Bash. Pasta do projeto: `C:\Users\Desenvolvedor\Documents\port\StocKit` (D-06, M0.1).
-- Versões (Python, Node, Django, React) são **fixadas na M0.2** e anotadas aqui. *Hipótese:* Python 3.12+, Node LTS,
-  Django LTS vigente, React 18/19 com Vite. Verificar o que está instalado antes de fixar.
-- **Instalado na máquina (fato, verificado em 2026-10-27):** Git 2.56.0.windows.2, Python 3.14.3, Node v24.14.1.
-  Ainda não fixados — conferir compatibilidade de Django/PyInstaller/CustomTkinter com Python 3.14 na M0.2.
+- **Instalado na máquina (fato, verificado em 2026-10-27):** Git 2.56.0.windows.2, Python 3.14.3 (também há 3.12.10),
+  Node v24.14.1, Tk 8.6.
+- **Versões fixadas na M0.2 (D-04, 2026-10-27):**
+
+| Componente | Versão | Onde está fixada | Verificação |
+|---|---|---|---|
+| Python | 3.14 (`>=3.14,<3.15`) | `pyproject.toml`, `.python-version` | Instalado; venv criado com 3.14.3 |
+| Node | 24 (LTS) | `.nvmrc` | Instalado (v24.14.1); usado a partir da M6 |
+| pip (venv) | 26.2.2 | README (passo de setup) | Instalado no venv |
+| setuptools (build) | 84.2.1 | `pyproject.toml` `[build-system]` | Instalação editável ok |
+| Django | 5.2.18 (LTS) | extra `web` | PyPI declara Python 3.14 (fato). Não instalado ainda (M5). 6.1.2 existe, mas não é LTS |
+| Django REST Framework | 3.18.3 | extra `web` | PyPI declara Python 3.14 (fato). Não instalado (M5) |
+| CustomTkinter | 6.0.0 | extra `desktop` | Testado em venv descartável no 3.14.3: janela abre e fecha sem erro (fato) |
+| PyInstaller | 6.22.3 | extra `package` | PyPI declara Python 3.14 (fato). Não testado (M3.12) |
+| React / Vite / TypeScript | — | — | Fixar na M6.1 |
+
+- Ferramentas de qualidade (ruff, mypy, pytest...) entram com versão fixa na M0.3.
+- *Pendente:* dependências **transitivas** ainda não têm lock (ex.: `darkdetect`, `asgiref`). Avaliar lockfile
+  (pip-tools/uv) antes de instalar os extras (M3/M5) para cumprir RNF-006 por completo.
 
 ### 5.2 Stack e ferramentas
 
@@ -321,7 +336,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | ID | Etapa | Tam. | Status |
 |---|---|---|---|
 | M0.1 | Criar repositório (pasta definida em D-06), `git init`, branches `main`/`dev`, `.gitignore`, LICENSE (D-05), README mínimo; **mover este arquivo para a raiz** | P | ✅ |
-| M0.2 | `pyproject.toml` com `core` instalável em modo editável; venv; **fixar versões** de Python/Node/Django e registrar em §5.1 | P | ⬜ |
+| M0.2 | `pyproject.toml` com `core` instalável em modo editável; venv; **fixar versões** de Python/Node/Django e registrar em §5.1 | P | ✅ |
 | M0.3 | Ferramentas: ruff, mypy (estrito no `core`), pytest, pytest-cov, hypothesis, pre-commit; alvo único `make check` (ou script equivalente no Windows) | P | ⬜ |
 | M0.4 | Contratos do `import-linter` (`core` não importa adaptadores/apps/frameworks) | P | ⬜ |
 | M0.5 | CI no GitHub Actions: lint, tipos, testes, import-linter em push na `dev` e PRs | P | ⬜ |
@@ -634,6 +649,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M0.2 concluída.** Feito: verificadas no PyPI as versões e o suporte a Python 3.14 de Django, DRF, PyInstaller, CustomTkinter, setuptools e pip; CustomTkinter 6.0.0 testado de verdade num venv descartável (abre janela no 3.14.3). Criados `pyproject.toml` (distribuição `stockit`, `core` sem dependências, extras `desktop`/`web`/`package` com versões exatas), esqueleto `core/{domain,services,ports}` com `py.typed`, `.python-version` (3.14) e `.nvmrc` (24). Venv `.venv` com 3.14.3, `pip install -e .` ok; `import core` de fora do repositório resolve para o código-fonte (editável confirmado). README ganhou o passo a passo de setup. Decisões: D-03 = CustomTkinter (usuário); D-04 = Python 3.14, Node 24 LTS, Django 5.2.18 LTS. Lição: a versão mais nova do Django (6.1.2) não é LTS; o documento pede LTS, por isso 5.2. Pendência registrada em §5.1: lock de dependências transitivas. |
 | 2026-10-27 | **M0.1 concluída.** Feito: `git init` na pasta definida (D-06), `.gitignore` (Python, Node, Django, bancos `.db`/`.sqlite3`, `.env`, caches de ferramentas), `.gitattributes` (LF no repo, CRLF em `.bat`/`.cmd`/`.ps1`), LICENSE MIT, README mínimo, commit inicial na `main` e branch `dev` criada a partir dela (trabalho segue na `dev`). Este arquivo já estava na raiz da pasta; atualizado o nome para **StocKit**. Resultado: ok, nada publicado (sem remoto, sem push). Decisões: D-01 = StocKit (escolha do usuário); D-05 = MIT (usuário sem preferência → recomendação do documento); D-06 = pasta atual. Lição: o titular do copyright na LICENSE usa o usuário GitHub `KaueChristian` (§2) — *hipótese* de que é o nome desejado; ajustar se não for. |
 | 2026-10-27 | **Planejamento inicial.** Revisado o portfólio (`kauechristian.github.io`): a seção de projetos só renderiza placeholders de template e **não há repositório do Inventory Manager**; confirmado pelo usuário que o projeto começa do zero. Pesquisadas referências no GitHub (§21). Decisões tomadas: universal (sem nicho), duas plataformas com núcleo compartilhado, sem servidor dedicado, desktop primeiro. Este arquivo criado com o roadmap M0–M7 e portões de integridade. Nenhum código escrito. |
 
@@ -689,8 +705,8 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 |---|---|---|---|
 | ~~D-01~~ | ~~Nome definitivo do projeto~~ | ✅ **StocKit** (§19, 2026-10-27) | M0.1 |
 | D-02 | Persistência do desktop: repositório SQLite próprio ou Django ORM headless | **SQLite próprio** (stack e demonstração de portas/adaptadores) | M0.6 (ADR-002) |
-| D-03 | Tkinter puro ou CustomTkinter | **CustomTkinter** (visual); aceitar a dependência extra | M0.2 |
-| D-04 | Versões fixas de Python, Node, Django | Fixar o que estiver instalado e estável, verificando antes | M0.2 |
+| ~~D-03~~ | ~~Tkinter puro ou CustomTkinter~~ | ✅ **CustomTkinter 6.0.0** (§19, 2026-10-27) | M0.2 |
+| ~~D-04~~ | ~~Versões fixas de Python, Node, Django~~ | ✅ Python 3.14, Node 24 LTS, Django 5.2.18 LTS (§5.1, §19) | M0.2 |
 | ~~D-05~~ | ~~Licença do repositório~~ | ✅ **MIT** (§19, 2026-10-27) | M0.1 |
 | ~~D-06~~ | ~~Pasta local do projeto~~ | ✅ `C:\Users\Desenvolvedor\Documents\port\StocKit` (§19, 2026-10-27) | M0.1 |
 | D-07 | Método de valoração inicial | **Custo médio móvel**; FIFO depois (B-03) | M1.14 |
@@ -714,6 +730,11 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Licença **MIT** (D-05) | Usuário sem preferência; recomendação do documento (permissiva, comum em portfólio) |
 | 2026-10-27 | Pasta do projeto: `C:\Users\Desenvolvedor\Documents\port\StocKit` (D-06) | Pasta onde o documento já estava; fora de Downloads |
 | 2026-10-27 | Finais de linha normalizados em LF via `.gitattributes` | Evita diffs falsos entre Windows e CI (Linux) |
+| 2026-10-27 | Desktop com **CustomTkinter 6.0.0** (D-03) | Escolha do usuário; mitiga R-03; testado no Python 3.14 |
+| 2026-10-27 | **Python 3.14** como versão única (D-04) | Já instalado; Django 5.2 LTS, DRF, PyInstaller e CustomTkinter suportam (verificado em §5.1) |
+| 2026-10-27 | **Django 5.2 LTS** em vez do 6.1 | O documento pede LTS; 5.2 tem suporte até 2028 e já cobre o Python 3.14 |
+| 2026-10-27 | **Node 24 LTS** para o frontend | Já instalado; linha LTS |
+| 2026-10-27 | Um único `pyproject.toml` (distribuição `stockit`) com extras por plataforma | O `core` fica sem dependências; cada app instala só o extra dele |
 
 **Índice de ADRs** (`docs/adr/`, preencher na M0.6): ADR-001 núcleo hexagonal · ADR-002 SQLite no desktop · ADR-003 Django ORM na web · ADR-004 livro de movimentações · ADR-005 campos personalizados em JSON.
 
