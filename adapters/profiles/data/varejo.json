@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "key": "varejo",
+  "name": "Varejo",
+  "description": "Loja que compra e revende mercadorias: código de barras, marca e embalagens de fornecedor.",
+  "labels": {
+    "item": "Produto",
+    "items": "Produtos",
+    "location": "Setor",
+    "locations": "Setores",
+    "role.customer": "Cliente"
+  },
+  "units": [
+    {"symbol": "cx12", "name": "caixa com 12", "dimension": "count", "factor": "12"},
+    {"symbol": "fd6", "name": "fardo com 6", "dimension": "count", "factor": "6"}
+  ],
+  "categories": ["Mercearia", "Bebidas", "Higiene", "Limpeza"],
+  "custom_fields": [
+    {"key": "codigo_barras", "label": "Código de barras (EAN)", "type": "text", "kinds": ["resale"], "max_length": 14},
+    {"key": "marca", "label": "Marca", "type": "text", "kinds": ["resale"], "max_length": 60},
+    {"key": "margem_alvo", "label": "Margem alvo (%)", "type": "number", "kinds": ["resale"], "min": "0", "max": "500"}
+  ],
+  "settings": {"negative_stock_policy": "forbid"}
+}

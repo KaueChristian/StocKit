@@ -28,6 +28,7 @@ from core.domain.location import Location
 from core.domain.lot import Lot
 from core.domain.movement import Movement
 from core.domain.party import Party
+from core.domain.settings import SystemSettings
 from core.ports.clock import Clock
 from core.ports.repositories import (
     CategoryRepository,
@@ -37,6 +38,7 @@ from core.ports.repositories import (
     LotRepository,
     MovementRepository,
     PartyRepository,
+    SettingsRepository,
 )
 from core.ports.unit_of_work import UnitOfWork
 
@@ -78,12 +80,17 @@ def test_unit_of_work_exposes_every_repository_and_the_transaction() -> None:
         "parties",
         "lots",
         "custom_fields",
+        "settings",
         "movements",
         "__enter__",
         "__exit__",
         "commit",
         "rollback",
     }
+
+
+def test_settings_port_has_get_and_save() -> None:
+    assert get_protocol_members(SettingsRepository) == {"get", "save"}
 
 
 def test_clock_has_only_now() -> None:
@@ -126,6 +133,13 @@ class _Fields(_Registry[CustomFieldDefinition, CustomFieldId]):
         return ()
 
 
+class _Settings:
+    def get(self) -> SystemSettings:
+        return SystemSettings()
+
+    def save(self, settings: SystemSettings) -> None: ...
+
+
 class _Movements:
     def append(self, movement: Movement) -> None: ...
 
@@ -153,6 +167,7 @@ class _Uow:
     parties = _Registry[Party, PartyId]()
     lots = _Lots()
     custom_fields = _Fields()
+    settings = _Settings()
     movements = _Movements()
     committed = False
 

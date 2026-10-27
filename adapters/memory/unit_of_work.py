@@ -16,6 +16,7 @@ from adapters.memory.repositories import (
     MemoryLotRepository,
     MemoryMovementRepository,
     MemoryPartyRepository,
+    MemorySettingsRepository,
     MemoryState,
 )
 
@@ -83,6 +84,10 @@ class MemoryUnitOfWork:
     @property
     def custom_fields(self) -> MemoryCustomFieldRepository:
         return MemoryCustomFieldRepository(self._require_open().custom_fields)
+
+    @property
+    def settings(self) -> MemorySettingsRepository:
+        return MemorySettingsRepository(self._require_open())
 
     @property
     def movements(self) -> MemoryMovementRepository:

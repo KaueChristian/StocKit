@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "key": "ti",
+  "name": "TI",
+  "description": "Inventário de TI: equipamentos com número de série e patrimônio, garantia e estado de conservação.",
+  "labels": {
+    "item": "Equipamento",
+    "items": "Equipamentos",
+    "location": "Sala",
+    "locations": "Salas",
+    "serial": "Número de série",
+    "kind.serialized": "Equipamento serializado",
+    "role.department": "Setor"
+  },
+  "units": [],
+  "categories": ["Notebooks", "Monitores", "Periféricos", "Rede", "Cabos"],
+  "custom_fields": [
+    {"key": "patrimonio", "label": "Número de patrimônio", "type": "text", "kinds": ["asset", "serialized"], "required": true, "max_length": 20},
+    {"key": "garantia_ate", "label": "Garantia até", "type": "date", "kinds": ["asset", "serialized"]},
+    {"key": "estado", "label": "Estado de conservação", "type": "choice", "kinds": ["asset", "serialized"], "choices": ["Novo", "Bom", "Regular", "Defeito"]}
+  ],
+  "settings": {"negative_stock_policy": "forbid"}
+}

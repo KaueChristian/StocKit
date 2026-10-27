@@ -75,7 +75,7 @@ def record_movement(
     clock: Clock,
     command: RecordMovement,
     *,
-    policy: NegativeStockPolicy = NegativeStockPolicy.FORBID,
+    policy: NegativeStockPolicy | None = None,
 ) -> tuple[Movement, ...]:
     """Lança e devolve o que foi gravado: uma movimentação, ou uma por lote quando o FEFO
     reparte a saída. Erro de domínio = nada gravado."""
@@ -84,6 +84,7 @@ def record_movement(
     now = clock.now()
 
     with uow:
+        policy = _policy(uow, policy)
         item = active_item(uow, command.item_id)
         location = active_location(uow, command.location_id)
         if command.party_id is not None and not uow.parties.get(command.party_id).active:
@@ -128,7 +129,7 @@ def transfer_stock(
     clock: Clock,
     command: TransferStock,
     *,
-    policy: NegativeStockPolicy = NegativeStockPolicy.FORBID,
+    policy: NegativeStockPolicy | None = None,
 ) -> tuple[Movement, Movement]:
     """Lança saída na origem e entrada no destino, juntas (INV-03). Devolve (saída, entrada).
 
@@ -137,6 +138,7 @@ def transfer_stock(
     """
     now = clock.now()
     with uow:
+        policy = _policy(uow, policy)
         item = active_item(uow, command.item_id)
         origin = active_location(uow, command.from_location)
         destination = active_location(uow, command.to_location)
@@ -164,6 +166,11 @@ def transfer_stock(
         uow.movements.append(incoming)
         uow.commit()
     return outgoing, incoming
+
+
+def _policy(uow: UnitOfWork, given: NegativeStockPolicy | None) -> NegativeStockPolicy:
+    """Política pedida na chamada ou, se nenhuma, a da configuração do sistema (M1.12)."""
+    return given if given is not None else uow.settings.get().negative_stock_policy
 
 
 def _split_by_fefo(

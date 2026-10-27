@@ -27,6 +27,7 @@ from core.domain.location import Location
 from core.domain.lot import Lot, fefo_order
 from core.domain.movement import Movement, MovementKind
 from core.domain.party import Party
+from core.domain.settings import SystemSettings
 
 
 @dataclass
@@ -41,6 +42,7 @@ class MemoryState:
     lots: dict[LotId, Lot] = field(default_factory=dict)
     custom_fields: dict[CustomFieldId, CustomFieldDefinition] = field(default_factory=dict)
     movements: list[Movement] = field(default_factory=list)
+    settings: SystemSettings = field(default_factory=SystemSettings)
 
     def copy(self) -> MemoryState:
         return MemoryState(
@@ -51,6 +53,7 @@ class MemoryState:
             lots=dict(self.lots),
             custom_fields=dict(self.custom_fields),
             movements=list(self.movements),
+            settings=self.settings,
         )
 
 
@@ -163,6 +166,19 @@ class MemoryCustomFieldRepository(_Registry[CustomFieldDefinition, CustomFieldId
         other = self.find_by_key(entity.key)
         if other is not None and other.id != entity.id:
             raise ConflictError(f"já existe um campo com a chave {entity.key}")
+
+
+class MemorySettingsRepository:
+    """Guarda a configuração no ``MemoryState`` da Unit of Work (é um valor imutável)."""
+
+    def __init__(self, state: MemoryState) -> None:
+        self._state = state
+
+    def get(self) -> SystemSettings:
+        return self._state.settings
+
+    def save(self, settings: SystemSettings) -> None:
+        self._state.settings = settings
 
 
 class MemoryMovementRepository:

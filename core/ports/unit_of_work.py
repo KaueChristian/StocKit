@@ -22,6 +22,7 @@ from core.ports.repositories import (
     LotRepository,
     MovementRepository,
     PartyRepository,
+    SettingsRepository,
 )
 
 
@@ -43,6 +44,9 @@ class UnitOfWork(Protocol):
 
     @property
     def custom_fields(self) -> CustomFieldRepository: ...
+
+    @property
+    def settings(self) -> SettingsRepository: ...
 
     @property
     def movements(self) -> MovementRepository: ...

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "key": "oficina",
+  "name": "Oficina",
+  "description": "Oficina mecânica ou de manutenção: peças com aplicação e fabricante, consumíveis e ferramentas.",
+  "labels": {
+    "item": "Peça",
+    "items": "Peças",
+    "location": "Prateleira",
+    "locations": "Prateleiras",
+    "kind.asset": "Ferramenta",
+    "role.department": "Box"
+  },
+  "units": [
+    {"symbol": "jg4", "name": "jogo com 4", "dimension": "count", "factor": "4"}
+  ],
+  "categories": ["Motor", "Freios", "Suspensão", "Elétrica", "Fluidos", "Ferramentas"],
+  "custom_fields": [
+    {"key": "aplicacao", "label": "Aplicação (modelos)", "type": "text", "kinds": ["resale", "consumable"], "max_length": 200},
+    {"key": "fabricante", "label": "Fabricante", "type": "text", "kinds": ["resale", "consumable", "asset"], "max_length": 60},
+    {"key": "codigo_fabricante", "label": "Código do fabricante", "type": "text", "kinds": ["resale", "consumable"], "max_length": 40}
+  ],
+  "settings": {"negative_stock_policy": "forbid"}
+}

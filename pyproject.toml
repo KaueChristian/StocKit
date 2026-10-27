@@ -33,6 +33,7 @@ dev = [
     "hypothesis==6.170.12",
     "pre-commit==4.7.0",
     "import-linter==2.15",
+    "jsonschema==4.26.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -40,6 +41,7 @@ include = ["core*", "adapters*"]
 
 [tool.setuptools.package-data]
 core = ["py.typed"]
+adapters = ["profiles/data/*.json", "profiles/*.schema.json"]
 
 # ---------------------------------------------------------------- ruff
 [tool.ruff]
@@ -78,6 +80,11 @@ files = ["core", "adapters", "tests", "tools"]
 strict = true
 explicit_package_bases = true
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+# jsonschema não publica tipos (sem py.typed); só os testes o usam (M1.12).
+module = ["jsonschema", "jsonschema.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["tests.*", "tools.*"]

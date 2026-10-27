@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KaueChristian/StocKit/adapters/profiles/profile.schema.json",
+  "title": "Perfil do StocKit",
+  "description": "Pré-configura o StocKit para um tipo de negócio. A validação que vale é core.domain.profile.parse_profile; este schema descreve o mesmo formato para editores e é conferido contra ela por teste.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "key", "name"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "key": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,39}$"},
+    "name": {"$ref": "#/$defs/text80"},
+    "description": {"type": "string", "maxLength": 500},
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item": {"$ref": "#/$defs/label"},
+        "items": {"$ref": "#/$defs/label"},
+        "location": {"$ref": "#/$defs/label"},
+        "locations": {"$ref": "#/$defs/label"},
+        "category": {"$ref": "#/$defs/label"},
+        "party": {"$ref": "#/$defs/label"},
+        "lot": {"$ref": "#/$defs/label"},
+        "serial": {"$ref": "#/$defs/label"},
+        "kind.resale": {"$ref": "#/$defs/label"},
+        "kind.consumable": {"$ref": "#/$defs/label"},
+        "kind.asset": {"$ref": "#/$defs/label"},
+        "kind.serialized": {"$ref": "#/$defs/label"},
+        "role.supplier": {"$ref": "#/$defs/label"},
+        "role.customer": {"$ref": "#/$defs/label"},
+        "role.department": {"$ref": "#/$defs/label"}
+      }
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["symbol", "name", "dimension", "factor"],
+        "properties": {
+          "symbol": {"type": "string", "pattern": "^\\S(.*\\S)?$"},
+          "name": {"$ref": "#/$defs/text80"},
+          "dimension": {"enum": ["count", "mass", "volume", "length"]},
+          "factor": {"$ref": "#/$defs/positiveDecimal"}
+        }
+      }
+    },
+    "categories": {"type": "array", "items": {"$ref": "#/$defs/text80"}},
+    "custom_fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "label", "type", "kinds"],
+        "properties": {
+          "key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"},
+          "label": {"$ref": "#/$defs/text80"},
+          "type": {"enum": ["text", "number", "date", "boolean", "choice"]},
+          "kinds": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"enum": ["resale", "consumable", "asset", "serialized"]}
+          },
+          "required": {"type": "boolean"},
+          "max_length": {"type": "integer", "minimum": 1},
+          "min": {"$ref": "#/$defs/decimal"},
+          "max": {"$ref": "#/$defs/decimal"},
+          "choices": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text80"}}
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "negative_stock_policy": {"enum": ["forbid", "allow"]}
+      }
+    }
+  },
+  "$defs": {
+    "text80": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S"},
+    "label": {"type": "string", "minLength": 1, "maxLength": 40, "pattern": "\\S"},
+    "decimal": {"type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$"},
+    "positiveDecimal": {"type": "string", "pattern": "^(?!0+(\\.0+)?$)[0-9]+(\\.[0-9]+)?$"}
+  }
+}

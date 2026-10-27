@@ -28,11 +28,12 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Ajuste** | Movimentação que corrige o saldo (nunca se edita uma movimentação antiga); exige motivo | `ADJUSTMENT_IN`, `ADJUSTMENT_OUT` |
 | **Transferência** | Par atômico saída + entrada entre dois locais, ligado por `transfer_id`; conserva a quantidade total | `transfer_stock` (serviço), `make_transfer`, `check_transfer_pair` |
 | **Política de saldo negativo** | Configuração que proíbe (padrão) ou permite saída acima do saldo; conferida em toda a linha do tempo a partir da movimentação | `NegativeStockPolicy` |
+| **Configuração do sistema** | Uma por instalação: política de saldo negativo, perfil aplicado, vocabulário das telas e unidades extras | `SystemSettings`, `uow.settings` |
 | **Registro de movimentação** | Serviço único que lança entrada, saída, ajuste, perda e devolução: confere cadastros, converte para a unidade base e aplica a política | `record_movement` |
 | **Data de ocorrência / de registro** | Quando o fato aconteceu / quando foi lançado no sistema; lançamento retroativo tem as duas diferentes | `occurred_at`, `recorded_at` |
 | **FEFO** | *First Expired, First Out*: sai primeiro o lote que vence primeiro. Saída sem lote informado é repartida entre lotes nessa ordem; lote vencido fica de fora | `fefo_order`, `record_movement` |
 | **Campo personalizado** | Campo extra definido para tipos de item (chave, rótulo, tipo — texto, número, data, sim/não, lista —, obrigatório, regras); valores no item, em JSON com número como texto decimal (ADR-005) | `CustomFieldDefinition`, `Item.custom_fields`, `validate_custom_fields` |
-| **Perfil** | JSON que pré-configura rótulos, campos e unidades de um tipo de negócio | — |
+| **Perfil** | JSON que pré-configura vocabulário, unidades, categorias, campos personalizados e política de um tipo de negócio; aplicar acrescenta, não sobrescreve | `Profile`, `parse_profile`, `apply_profile`; arquivos em `adapters/profiles/` |
 | **Contagem / inventário cíclico** | Conferência física: contado × sistema → divergência → movimentos de ajuste | — |
 | **Custo médio móvel** | Valoração em que cada entrada recalcula o custo médio do item (D-07) | — |
 | **Ponto de reposição** | Saldo a partir do qual se deve repor | — |

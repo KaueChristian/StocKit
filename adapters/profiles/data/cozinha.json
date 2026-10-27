@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "key": "cozinha",
+  "name": "Cozinha",
+  "description": "Cozinha de restaurante ou produção: insumos com validade, temperatura de armazenamento e alergênicos.",
+  "labels": {
+    "item": "Insumo",
+    "items": "Insumos",
+    "location": "Área",
+    "locations": "Áreas",
+    "kind.consumable": "Insumo",
+    "lot": "Lote de produção"
+  },
+  "units": [
+    {"symbol": "cx12", "name": "caixa com 12", "dimension": "count", "factor": "12"},
+    {"symbol": "pct500g", "name": "pacote de 500 g", "dimension": "mass", "factor": "0.5"}
+  ],
+  "categories": ["Laticínios", "Hortifrúti", "Carnes", "Secos", "Congelados"],
+  "custom_fields": [
+    {"key": "temperatura", "label": "Temperatura de armazenamento (°C)", "type": "number", "kinds": ["consumable"], "required": true, "min": "-30", "max": "30"},
+    {"key": "alergenico", "label": "Contém alergênico", "type": "boolean", "kinds": ["consumable"]},
+    {"key": "conservacao", "label": "Conservação", "type": "choice", "kinds": ["consumable"], "choices": ["Ambiente", "Refrigerado", "Congelado"]}
+  ],
+  "settings": {"negative_stock_policy": "forbid"}
+}

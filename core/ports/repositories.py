@@ -35,6 +35,7 @@ from core.domain.location import Location
 from core.domain.lot import Lot
 from core.domain.movement import Movement
 from core.domain.party import Party
+from core.domain.settings import SystemSettings
 
 
 class Repository[E, K](Protocol):
@@ -92,6 +93,14 @@ class CustomFieldRepository(Repository[CustomFieldDefinition, CustomFieldId], Pr
     def list_for_kind(self, kind: ItemKind) -> Sequence[CustomFieldDefinition]:
         """Definições que se aplicam a itens do tipo ``kind``, por chave."""
         ...
+
+
+class SettingsRepository(Protocol):
+    """Configuração do sistema: uma só. Antes de qualquer ``save``, ``get`` devolve o padrão."""
+
+    def get(self) -> SystemSettings: ...
+
+    def save(self, settings: SystemSettings) -> None: ...
 
 
 class MovementRepository(Protocol):

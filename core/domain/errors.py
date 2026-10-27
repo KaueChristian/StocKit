@@ -52,3 +52,12 @@ class InsufficientStockError(DomainError):
 
 class SerialNumberError(DomainError):
     """Número de série em lugar impossível: entra já estando em estoque, ou sai de onde não está."""
+
+
+class ProfileError(DomainError):
+    """Perfil inválido. ``path`` diz onde, no JSON do perfil (ex.: ``custom_fields[2].type``)."""
+
+    def __init__(self, path: str, message: str) -> None:
+        super().__init__(f"{path}: {message}")
+        self.path = path
+        self.reason = message
