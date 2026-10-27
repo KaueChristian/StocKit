@@ -13,7 +13,8 @@ O saldo vem de um **livro de movimentações imutáveis** (nunca de uma coluna e
 ## Documentação
 
 - [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) — documento-chefe: visão, arquitetura, requisitos, roadmap, diário e decisões.
-- `docs/` — ADRs, diagramas C4, requisitos e planos de teste (a partir da etapa M0.6).
+- [`docs/`](docs/README.md) — [requisitos](docs/requirements.md), [glossário](docs/glossary.md),
+  [decisões de arquitetura (ADRs)](docs/adr/README.md) e [planos de teste](docs/test-plan/README.md).
 
 ## Ambiente de desenvolvimento
 

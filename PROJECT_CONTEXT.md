@@ -30,7 +30,8 @@
    (e ADR em `docs/adr/` se for arquitetural).
 5. Se mediu algo, registre em §13 (número sem condição de medição não entra).
 6. Marque o que é **fato verificado** e o que é **hipótese**. Nunca escreva hipótese como fato.
-7. Se a etapa mudou comportamento: atualizar requisito (§8), teste vinculado e a documentação em `docs/` **no mesmo commit**.
+7. Se a etapa mudou comportamento: atualizar requisito (`docs/requirements.md`), teste vinculado e a documentação em
+   `docs/` **no mesmo commit**.
 
 **Regras inegociáveis**
 - **O `core` é Python puro.** Não importa Tkinter, Django, `sqlite3` nem nada de I/O. Vigiado pelo `import-linter` no CI.
@@ -52,9 +53,9 @@
 | Campo | Valor |
 |---|---|
 | Milestone aberto | **M0 — Fundação** |
-| Última etapa concluída | **M0.5** — workflow de CI escrito e validado localmente; ainda não executado no GitHub (2026-10-27) |
-| Próxima etapa | **M0.6** — `docs/`: glossário, `requirements.md`, template de ADR e ADRs 001–005 |
-| Bloqueios | Nenhum para a M0.6. **Portão M0** (TP-M0-03, TP-M0-04) exige repositório remoto no GitHub e push — só com pedido explícito do usuário (§0) |
+| Última etapa concluída | **M0.6** — `docs/` (requisitos, glossário, planos de teste), template de ADR e ADRs 001–005, teste de coerência da documentação (2026-10-27) |
+| Próxima etapa | **M0.7** — diagramas C4 níveis 1–2 em Mermaid (`docs/c4/`) |
+| Bloqueios | Nenhum para a M0.7. **Portão M0** (TP-M0-03, TP-M0-04) exige repositório remoto no GitHub e push — só com pedido explícito do usuário (§0) |
 | Último portão aprovado | — |
 | Versão | 0.0.0 (nada publicado) |
 | Bugs abertos | 0 |
@@ -214,7 +215,8 @@ StocKit/
 Há dois adaptadores (SQLite puro e Django ORM) para as mesmas portas. A defesa é a **suíte de contrato**: os mesmos testes
 rodam parametrizados contra memória, SQLite e Django ORM. A **suíte de paridade** (M5) roda o mesmo cenário do dataset de
 referência nas duas plataformas e compara os saldos com um JSON dourado.
-*Plano B (não descartado, D-02):* o desktop usar o Django ORM sem servidor (`django.setup()` sem `runserver`), com schema
+*Decidido em D-02 / [ADR-002](docs/adr/002-sqlite-no-desktop.md):* desktop com repositórios próprios sobre `sqlite3`.
+*Plano B (não descartado, P-08):* o desktop usar o Django ORM sem servidor (`django.setup()` sem `runserver`), com schema
 único e migrações compartilhadas. Custo: executável mais pesado e fuga da stack "Tkinter + SQLite puro".
 
 ### 6.4 Padrão de UI no desktop
@@ -256,45 +258,12 @@ Padrão proposto: **custo médio móvel** (D-07). FIFO fica como política opcio
 
 ## 8. Requisitos (rastreáveis)
 
-> Cada RF/RNF tem ID, milestone-alvo e **pelo menos um teste** marcado com `@pytest.mark.req("RF-xxx")` (ou equivalente no
-> Vitest/Playwright). O script de rastreabilidade (M0.9) gera a matriz requisito × teste × status.
-
-| ID | Requisito | Milestone |
-|---|---|---|
-| RF-001 | Cadastrar, editar, inativar e buscar itens | M1/M3/M6 |
-| RF-002 | Cadastrar hierarquia de locais | M1/M3/M6 |
-| RF-003 | Cadastrar partes (fornecedor/cliente/setor) | M1/M3/M6 |
-| RF-004 | Definir campos personalizados por tipo de item e validá-los | M1/M3/M6 |
-| RF-005 | Registrar entrada, saída, transferência, ajuste e perda | M1/M3/M6 |
-| RF-006 | Calcular saldo por item, local e lote, inclusive "em uma data" | M1 |
-| RF-007 | Impedir saldo negativo conforme política configurável | M1 |
-| RF-008 | Controlar lote e validade com saída FEFO | M1 |
-| RF-009 | Itens serializados (unidade única, estado) | M1 |
-| RF-010 | Conversão entre unidades de medida | M1 |
-| RF-011 | Carregar perfis (varejo, cozinha, oficina, TI) | M1/M3 |
-| RF-012 | Histórico/extrato imutável por item com filtros | M3/M6 |
-| RF-013 | Migrações de schema versionadas e reversíveis a partir de banco antigo | M2 |
-| RF-014 | Backup/restauração do banco com verificação de integridade | M2/M3 |
-| RF-015 | Importar/exportar itens e movimentações em CSV com relatório de erros por linha | M3/M5/M6 |
-| RF-016 | Dashboard com KPIs e alertas | M3/M6 |
-| RF-017 | Registrar movimentação via leitor de código de barras (modo scanner) | M3/M6 |
-| RF-018 | Ponto de reposição e estoque de segurança por item | M4 |
-| RF-019 | Alertas: abaixo do mínimo, a vencer, sem giro | M4 |
-| RF-020 | Curva ABC por período | M4 |
-| RF-021 | Giro e cobertura em dias | M4 |
-| RF-022 | Previsão de ruptura com indicação de confiança | M4 |
-| RF-023 | Sugestão de compra por fornecedor | M4 |
-| RF-024 | Inventário cíclico com geração de ajustes | M4 |
-| RF-025 | Relatórios em PDF e etiquetas com QR/código de barras | M4 |
-| RF-026 | API REST documentada (OpenAPI) com autenticação e papéis | M5 |
-| RF-027 | Interface web com os mesmos fluxos do desktop | M6 |
-| RF-028 | Modo demonstração com dados determinísticos | M2/M7 |
-| RNF-001 | Cobertura de testes do `core` ≥ 90% (linhas) | M1 em diante |
-| RNF-002 | Saldo de item calculado em < 100 ms com 100 mil movimentações (meta inicial; recalibrar com medição) | M2/M4 |
-| RNF-003 | Abertura do desktop em < 3 s com o dataset demo (meta inicial) | M3 |
-| RNF-004 | Paridade: mesmo dataset ⇒ mesmos saldos nas duas plataformas | M5 |
-| RNF-005 | Acessibilidade: operação completa por teclado; contraste AA | M3/M6 |
-| RNF-006 | Nenhum segredo no repositório; dependências com versão fixa | M0 em diante |
+> **Movido para [`docs/requirements.md`](docs/requirements.md) na M0.6** — fonte única dos requisitos (RF-001..RF-028,
+> RNF-001..RNF-006), com milestone, invariantes relacionadas, casos de portão que os verificam e status.
+> Cada RF/RNF tem **pelo menos um teste** marcado com `@pytest.mark.req("RF-xxx")` (ou equivalente no
+> Vitest/Playwright); o script de rastreabilidade (M0.9) gera a matriz requisito × teste × status.
+> `tests/docs/test_docs_consistency.py` falha se este arquivo ou `docs/` citarem requisito, caso de portão, invariante
+> ou ADR que não existe. Requisitos ainda **sem caso de portão** estão listados em "Lacunas conhecidas" naquele arquivo.
 
 ---
 
@@ -353,7 +322,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | M0.3 | Ferramentas: ruff, mypy (estrito no `core`), pytest, pytest-cov, hypothesis, pre-commit; alvo único `make check` (ou script equivalente no Windows) | P | ✅ |
 | M0.4 | Contratos do `import-linter` (`core` não importa adaptadores/apps/frameworks) | P | ✅ |
 | M0.5 | CI no GitHub Actions: lint, tipos, testes, import-linter em push na `dev` e PRs | P | ✅ (validado localmente; 1ª execução real no GitHub pendente → TP-M0-03) |
-| M0.6 | `docs/`: estrutura, glossário (§20), `requirements.md` (a partir de §8), template de ADR e **ADRs 001–005** (núcleo hexagonal; SQLite no desktop; Django ORM na web; livro de movimentações; campos personalizados em JSON) | M | ⬜ |
+| M0.6 | `docs/`: estrutura, glossário (§20), `requirements.md` (a partir de §8), template de ADR e **ADRs 001–005** (núcleo hexagonal; SQLite no desktop; Django ORM na web; livro de movimentações; campos personalizados em JSON) | M | ✅ |
 | M0.7 | Diagramas C4 níveis 1–2 em Mermaid (`docs/c4/`) | P | ⬜ |
 | M0.8 | Template de PR (checklist de §9.3.6), templates de issue, `CONTRIBUTING.md` curto | P | ⬜ |
 | M0.9 | Marker `req` no pytest + script `tools/traceability.py` que gera a matriz requisito × teste × status | M | ⬜ |
@@ -663,6 +632,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M0.6 concluída.** Feito: `docs/README.md` (índice), `docs/requirements.md` (34 requisitos do antigo §8, com invariantes, casos de portão e status), `docs/glossary.md` (antigo §20 ampliado com termos de domínio, arquitetura e processo), `docs/test-plan/README.md` (template de caso manual), `docs/adr/template.md`, índice e **ADRs 001–005** (todos *Aceito*; ADR-002 registra a escolha do usuário em D-02). §8 e §20 deste arquivo viraram ponteiros. Novo `tests/docs/test_docs_consistency.py` (57 casos): todo RF/RNF, TP, INV e ADR citado existe; IDs de requisito únicos; requisitos sem caso de portão estão em "Lacunas"; ADRs seguem o template e estão no índice. **Testes negativos:** RF, TP, INV e ADR inexistentes e um ADR sem seção obrigatória — os 5 foram pegos; arquivos restaurados. Dois falsos alarmes do próprio teste corrigidos antes (o `★` dos casos críticos e a tabela de lacunas contada como duplicata). **Achado:** RF-002, RF-003, RF-016 e RF-019 **não têm caso de portão**; listados em "Lacunas conhecidas" com sugestão de caso — precisam entrar nos planos de M1, M3 e M4 antes desses portões. pre-commit agora roda o pytest também quando um `.md` muda. |
 | 2026-10-27 | **M0.5 concluída (sem remoto, por pedido do usuário).** Feito: `.github/workflows/ci.yml` com job `check` em matriz Ubuntu + Windows (instala do zero e roda `tools/check.py`, hypothesis no perfil `ci`) e job `higiene` (pre-commit sem os ganchos que o check já cobre). Gatilhos: push e PR em `dev`/`main` e disparo manual. Segurança: `permissions: contents: read`, `persist-credentials: false`, actions fixadas por hash, cancelamento de execuções antigas da mesma branch. Shell `bash` também no Windows (o `pwsh` padrão não para no primeiro erro). Novo gancho `check-github-workflows` (schema oficial). **Verificação:** schema ok; workflow com erro proposital (`stepz`) rejeitado; **simulação dos passos do CI num clone limpo** (venv, instalação, check, higiene) verde em 43 s. **Não verificado (fato):** execução no GitHub — sem repositório remoto; fica para TP-M0-03 no portão. Hipótese não testada: `default_language_version: python3.14` do pre-commit acha o `python3.14` no runner Ubuntu (o setup-python costuma criar esse executável). |
 | 2026-10-27 | **M0.4 concluída.** Feito: import-linter 2.15 no grupo `dev`, no `tools/check.py` (via executável do venv, pois o pacote não roda com `python -m`) e no pre-commit. Contratos: `core-puro` (forbidden: adapters, apps, tools, tests, Tkinter/CustomTkinter, Django/DRF/drf-spectacular, sqlite3, reportlab, qrcode, barcode, Faker, PyInstaller, socket/ssl/http/urllib/subprocess/multiprocessing, pytest/hypothesis) e `core-camadas` (layers: services → ports → domain). **Verificado antes de escrever:** com `include_external_packages`, o import-linter detecta módulos da biblioteca padrão e aceita proibir pacotes que ainda não existem. **Testes negativos** (arquivo temporário em `core/domain`, removido depois): `import tkinter`, `from django.db import models`, `import core.services` dentro do domain e `from adapters.sqlite import repo` — cada um quebrou o contrato certo (saída 1); `tools/check.py` também falhou. Check de volta ao verde (2,5 s). Ajuste extra: `tools/check.py` força UTF-8 nas ferramentas (acentos saíam embaralhados com a saída redirecionada no Windows). Limitação registrada em §6.2: imports dinâmicos não são detectados. |
 | 2026-10-27 | **M0.3 concluída.** Feito: ferramentas em `[dependency-groups] dev` com versões exatas (verificadas no PyPI); configuração de ruff (inclui `DTZ` para datas sem fuso e `S` de segurança), mypy `strict` (testes/scripts podem ter funções sem anotação), pytest (`--strict-markers`, warnings viram erro, `importlib`), cobertura com ramos e mínimo de 90% no `core`; `tests/conftest.py` com perfis do hypothesis `dev`/`ci`; teste de pacote (`core` e subcamadas importáveis, `py.typed` presente); `tools/check.py` + `Makefile`; `.pre-commit-config.yaml` (higiene, ruff, mypy e pytest) instalado no `.git/hooks`. Resultado: check verde (8,5 s) e `pre-commit run --all-files` verde. **Teste negativo:** um arquivo proposital com import sem uso e função sem tipo fez falhar ruff, mypy e cobertura, com código de saída 1; arquivo removido em seguida. Causa da escolha do script Python: não há GNU make no Windows (o `make` do PATH é do Embarcadero). Lição: a instalação pelo PyPI teve timeouts de leitura com novas tentativas; terminou, mas a rede pode atrasar a configuração em máquina limpa (TP-M0-01). |
@@ -721,7 +691,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | ID | Pergunta | Recomendação | Prazo |
 |---|---|---|---|
 | ~~D-01~~ | ~~Nome definitivo do projeto~~ | ✅ **StocKit** (§19, 2026-10-27) | M0.1 |
-| D-02 | Persistência do desktop: repositório SQLite próprio ou Django ORM headless | **SQLite próprio** (stack e demonstração de portas/adaptadores) | M0.6 (ADR-002) |
+| ~~D-02~~ | ~~Persistência do desktop~~ | ✅ **SQLite próprio** (escolha do usuário; ADR-002, 2026-10-27) | M0.6 |
 | ~~D-03~~ | ~~Tkinter puro ou CustomTkinter~~ | ✅ **CustomTkinter 6.0.0** (§19, 2026-10-27) | M0.2 |
 | ~~D-04~~ | ~~Versões fixas de Python, Node, Django~~ | ✅ Python 3.14, Node 24 LTS, Django 5.2.18 LTS (§5.1, §19) | M0.2 |
 | ~~D-05~~ | ~~Licença do repositório~~ | ✅ **MIT** (§19, 2026-10-27) | M0.1 |
@@ -755,6 +725,10 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Comando de qualidade = `python tools/check.py`; `make check` só chama o script | Funciona igual no Windows (sem GNU make) e no CI |
 | 2026-10-27 | Ferramentas de dev em `[dependency-groups]` (PEP 735), não em extras | Não fazem parte do pacote publicado; `pip install --group dev` (pip ≥ 25.1) |
 | 2026-10-27 | Cobertura mínima de 90% já ativa desde a M0 | Mais simples ligar agora do que lembrar de ligar na M1 (RNF-001) |
+| 2026-10-27 | Desktop com **repositórios próprios sobre `sqlite3`** (D-02, ADR-002) | Escolha do usuário; executável leve e demonstração de portas/adaptadores; Django ORM headless segue como plano B (P-08) |
+| 2026-10-27 | Requisitos e glossário movidos para `docs/` (fonte única); §8 e §20 viram ponteiros | Duas cópias divergiriam (R-05); o teste de coerência impede citar ID inexistente |
+| 2026-10-27 | Requisitos ganharam colunas "Invariantes" e "Portão" e uma tabela de lacunas | Rastreabilidade requisito ↔ caso de portão desde já; expôs 4 requisitos sem caso de portão |
+| 2026-10-27 | ADRs numerados com 3 dígitos (`ADR-001`), seções obrigatórias checadas por teste | Mesmo padrão já citado neste arquivo; automatiza o TP-M0-06 |
 | 2026-10-27 | CI em **Ubuntu e Windows** | Windows é a plataforma do desktop e do `.exe`; pega cedo problemas de caminho e encoding. Custo: minutos ×2 no Windows em repositório privado |
 | 2026-10-27 | CI também em push na `main` (além de `dev` e PRs) | `main` é a branch estável; precisa provar que está verde |
 | 2026-10-27 | **Quarentena de 14 dias** para actions e ganchos novos; actions fixadas por hash de commit | Reduz risco de cadeia de suprimentos (tag sequestrada ou versão comprometida recém-publicada) |
@@ -762,30 +736,18 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | `core` também proíbe rede, subprocessos e bibliotecas de teste | Regra "nada de I/O" do §0; `os`/`pathlib` ficaram liberados por enquanto (reavaliar na M1.12, loader de perfis) |
 | 2026-10-27 | pre-commit roda mypy e pytest em ambientes isolados do próprio pre-commit | Funciona sem venv ativo; o `core` não tem dependências, então o ambiente isolado basta. Custo: versões repetidas em dois arquivos |
 
-**Índice de ADRs** (`docs/adr/`, preencher na M0.6): ADR-001 núcleo hexagonal · ADR-002 SQLite no desktop · ADR-003 Django ORM na web · ADR-004 livro de movimentações · ADR-005 campos personalizados em JSON.
+**Índice de ADRs** ([`docs/adr/`](docs/adr/README.md), criados na M0.6, todos *Aceito*):
+[ADR-001](docs/adr/001-nucleo-hexagonal.md) núcleo hexagonal · [ADR-002](docs/adr/002-sqlite-no-desktop.md) SQLite no
+desktop · [ADR-003](docs/adr/003-django-orm-na-web.md) Django ORM na web ·
+[ADR-004](docs/adr/004-livro-de-movimentacoes.md) livro de movimentações ·
+[ADR-005](docs/adr/005-campos-personalizados-em-json.md) campos personalizados em JSON.
 
 ---
 
 ## 20. Glossário
 
-| Termo | Significado |
-|---|---|
-| **Item** | Qualquer coisa controlada em estoque (produto, insumo, ativo, peça) |
-| **Movimentação** | Registro imutável de entrada, saída, transferência, ajuste, perda ou devolução |
-| **Livro (ledger)** | Sequência de movimentações da qual o saldo é derivado |
-| **Saldo** | Soma assinada das movimentações de (item, local, lote) |
-| **FEFO** | *First Expired, First Out*: sai primeiro o lote que vence primeiro |
-| **Ponto de reposição** | Saldo a partir do qual se deve repor |
-| **Estoque de segurança** | Margem para absorver variação de consumo/prazo |
-| **Curva ABC** | Classificação dos itens por valor de consumo (A mais relevante) |
-| **Giro** | Quantas vezes o estoque se renova num período |
-| **Cobertura** | Dias que o estoque atual dura no ritmo de consumo |
-| **Perfil** | JSON que pré-configura rótulos, campos e unidades de um tipo de negócio |
-| **Porta / Adaptador** | Interface do núcleo / implementação concreta (SQLite, Django ORM) |
-| **Contrato (teste)** | Suíte que todo adaptador de uma porta deve passar |
-| **Paridade** | Mesmo cenário produz mesmos resultados no desktop e na web |
-| **Portão** | Execução do plano de teste que fecha um milestone |
-| **ADR** | *Architecture Decision Record*: decisão arquitetural com contexto e consequências |
+> **Movido para [`docs/glossary.md`](docs/glossary.md) na M0.6** — fonte única do vocabulário (domínio, arquitetura e
+> processo).
 
 ---
 
