@@ -36,7 +36,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["core*"]
+include = ["core*", "adapters*"]
 
 [tool.setuptools.package-data]
 core = ["py.typed"]
@@ -74,7 +74,7 @@ allowed-confusables = ["×", "›"]
 # Estrito em tudo; testes e scripts podem ter funções sem anotação.
 [tool.mypy]
 python_version = "3.14"
-files = ["core", "tests", "tools"]
+files = ["core", "adapters", "tests", "tools"]
 strict = true
 explicit_package_bases = true
 warn_unreachable = true
@@ -99,10 +99,10 @@ filterwarnings = ["error"]
 # ---------------------------------------------------------------- import-linter (M0.4)
 # Regras de dependência de PROJECT_CONTEXT.md §6.2. Rodar: lint-imports
 # Pacotes que ainda não existem (adapters, apps, django...) podem ser proibidos desde já: o import-linter só acusa
-# quando o import aparece. Ao criar `adapters` (M1.5) e `apps` (M3.1), incluí-los em root_packages e ativar os
-# contratos comentados no fim desta seção.
+# quando o import aparece. `adapters` entrou na M1.5 (root_packages + contrato adapters-sem-apps); ao criar
+# `apps` (M3.1), incluí-lo em root_packages e ativar o contrato comentado no fim desta seção.
 [tool.importlinter]
-root_packages = ["core"]
+root_packages = ["core", "adapters"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
@@ -133,14 +133,14 @@ name = "Dentro do core: services usa ports e domain; ports usa domain; domain n�
 type = "layers"
 layers = ["core.services", "core.ports", "core.domain"]
 
-# A ativar quando os pacotes existirem (ver comentário acima):
-# [[tool.importlinter.contracts]]
-# id = "adapters-sem-apps"
-# name = "Adaptadores nunca importam apps"
-# type = "forbidden"
-# source_modules = ["adapters"]
-# forbidden_modules = ["apps"]
-#
+[[tool.importlinter.contracts]]
+id = "adapters-sem-apps"
+name = "Adaptadores implementam portas: nunca importam apps nem os serviços do core"
+type = "forbidden"
+source_modules = ["adapters"]
+forbidden_modules = ["apps", "core.services"]
+
+# A ativar quando o pacote apps existir (M3.1):
 # [[tool.importlinter.contracts]]
 # id = "apps-independentes"
 # name = "Um app nunca importa outro app"
@@ -149,7 +149,7 @@ layers = ["core.services", "core.ports", "core.domain"]
 
 # ---------------------------------------------------------------- coverage
 [tool.coverage.run]
-source = ["core"]
+source = ["core", "adapters"]
 branch = true
 
 [tool.coverage.report]

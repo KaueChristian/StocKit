@@ -46,6 +46,8 @@ Os contratos ficam no `pyproject.toml`, seção `[tool.importlinter]`:
 - **`core-puro`**: o `core` não importa adaptadores, apps, Tkinter, Django, `sqlite3`, bibliotecas de relatório,
   rede, subprocessos nem ferramentas de teste.
 - **`core-camadas`**: dentro do `core`, `services` → `ports` → `domain` (nunca o contrário).
+- **`adapters-sem-apps`**: `adapters` (memória hoje; SQLite e Django ORM depois) implementam portas: nunca
+  importam `apps` nem `core.services`.
 
 Imports dinâmicos (`importlib.import_module("tkinter")`) **não** são detectados; a revisão de código cobre esse caso.
 

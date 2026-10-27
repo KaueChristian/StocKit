@@ -4,8 +4,8 @@ Prova que os contratos reais do pyproject.toml **quebram** quando aparece um imp
 Sem este teste, um contrato mal escrito (nome de módulo errado, camada trocada) passaria em
 silêncio para sempre.
 
-Cada caso copia o ``core`` e o ``pyproject.toml`` para uma pasta temporária, planta um arquivo
-com o import proibido e roda o import-linter num subprocesso apontado para a cópia.
+Cada caso copia ``core``, ``adapters`` e o ``pyproject.toml`` para uma pasta temporária, planta um
+arquivo com o import proibido e roda o import-linter num subprocesso apontado para a cópia.
 O repositório nunca é alterado.
 """
 
@@ -26,7 +26,10 @@ LINT_IMPORTS = (
 
 @pytest.fixture
 def sandbox(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "core", tmp_path / "core", ignore=shutil.ignore_patterns("__pycache__"))
+    for package in ("core", "adapters"):
+        shutil.copytree(
+            ROOT / package, tmp_path / package, ignore=shutil.ignore_patterns("__pycache__")
+        )
     shutil.copy2(ROOT / "pyproject.toml", tmp_path / "pyproject.toml")
     return tmp_path
 
@@ -78,8 +81,27 @@ def test_clean_copy_keeps_every_contract(sandbox: Path) -> None:
             "from core.services import algo\n",
             "core.ports is not allowed to import core.services",
         ),
+        (
+            "adapters/memory/_sentinela.py",
+            "from apps.desktop import janela\n",
+            "adapters is not allowed to import apps",
+        ),
+        (
+            "adapters/memory/_sentinela.py",
+            "import core.services\n",
+            "adapters is not allowed to import core.services",
+        ),
     ],
-    ids=["tkinter", "django", "sqlite3", "adapters", "domain->services", "ports->services"],
+    ids=[
+        "tkinter",
+        "django",
+        "sqlite3",
+        "adapters",
+        "domain->services",
+        "ports->services",
+        "adapters->apps",
+        "adapters->services",
+    ],
 )
 def test_forbidden_import_breaks_contract(
     sandbox: Path, module: str, source: str, expected: str

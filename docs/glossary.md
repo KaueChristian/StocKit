@@ -46,7 +46,7 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 |---|---|
 | **Núcleo (`core`)** | Python puro com domínio, serviços e portas; não conhece banco, UI nem framework (ADR-001) |
 | **Porta** | Interface (`Protocol`) que o núcleo define e precisa: repositórios, `UnitOfWork`, `Clock` (`core/ports/`); nenhum repositório apaga, o livro só acrescenta |
-| **Adaptador** | Implementação concreta de uma porta (memória, SQLite, Django ORM) |
+| **Adaptador** | Implementação concreta de uma porta (memória, SQLite, Django ORM), em `adapters/`; a de memória (`adapters/memory`) serve aos testes e à demonstração |
 | **Value object** | Objeto definido só pelo valor, imutável (ex.: `Quantity`) |
 | **Invariante** | Regra que vale sempre (`INV-xx`, `PROJECT_CONTEXT.md` §7.2); cada uma tem teste de propriedade |
 | **Unit of Work** | Porta que agrupa gravações numa transação: tudo é gravado ou nada é |

@@ -33,10 +33,6 @@ def new_party_id() -> PartyId:
     return PartyId(uuid4())
 
 
-def new_lot_id() -> LotId:
-    return LotId(uuid4())
-
-
 def new_movement_id() -> MovementId:
     return MovementId(uuid4())
 

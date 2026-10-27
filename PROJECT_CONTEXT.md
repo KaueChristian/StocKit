@@ -52,9 +52,9 @@
 
 | Campo | Valor |
 |---|---|
-| Milestone aberto | **M1 — Núcleo de domínio** (4 de 14 etapas) |
-| Última etapa concluída | **M1.4** — portas `Clock`, repositórios (item, categoria, local, parte, livro de movimentações) e `UnitOfWork` como `Protocol` (2026-10-27) |
-| Próxima etapa | **M1.5** — repositórios em memória (`adapters/memory`) e ativação do contrato `adapters-sem-apps` |
+| Milestone aberto | **M1 — Núcleo de domínio** (5 de 14 etapas) |
+| Última etapa concluída | **M1.5** — adaptadores em memória (repositórios, `MemoryUnitOfWork` transacional) e relógios `SystemClock`/`FixedClock`; contrato `adapters-sem-apps` ativo (2026-10-27) |
+| Próxima etapa | **M1.6** — serviço `registrar_movimento` com política de saldo negativo (INV-05) e atomicidade via UoW |
 | Bloqueios | Nenhum |
 | Último portão aprovado | **M0** — 2026-10-27, 6 de 6 casos, BUG-01 achado e corrigido (§11) |
 | Versão | **0.0.1** — tag `v0.0.1` na `main` ([KaueChristian/StocKit](https://github.com/KaueChristian/StocKit)) |
@@ -210,9 +210,9 @@ StocKit/
 - `apps` importam `core.services` e um adaptador; nunca outro `app`.
 - Views DRF e presenters Tkinter **não contêm regra**: chamam serviço, traduzem erro de domínio, formatam saída.
 - Dentro do `core`: `services` → `ports` → `domain` (contrato `core-camadas`, M0.4).
-- **Estado dos contratos (M0.4):** ativos `core-puro` e `core-camadas`. `adapters-sem-apps` e `apps-independentes`
-  estão escritos e comentados no `pyproject.toml`; **ativar** ao criar `adapters` (M1.5) e `apps` (M3.1), incluindo os
-  pacotes em `root_packages`. Limitação conhecida: imports dinâmicos (`importlib`, `__import__`) não são detectados.
+- **Estado dos contratos (M1.5):** ativos `core-puro`, `core-camadas` e `adapters-sem-apps` (adaptadores não importam
+  `apps` nem `core.services`). `apps-independentes` está escrito e comentado no `pyproject.toml`; **ativar** ao criar
+  `apps` (M3.1), incluindo o pacote em `root_packages`. Limitação conhecida: imports dinâmicos (`importlib`, `__import__`) não são detectados.
 
 ### 6.3 Persistência dupla e como mantê-la honesta
 Há dois adaptadores (SQLite puro e Django ORM) para as mesmas portas. A defesa é a **suíte de contrato**: os mesmos testes
@@ -356,7 +356,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | M1.2 | Entidades `Item`, `Categoria`, `Local` (hierarquia), `Parte` com validações | M | ✅ (`Category`, `Location`, `Party` no código) |
 | M1.3 | `Movimentacao` imutável e tipos (entrada, saída, transferência, ajuste, perda, devolução) | M | ✅ (`Movement` no código) |
 | M1.4 | Portas: repositórios, `UnitOfWork`, `Clock` (`Protocol`) | P | ✅ |
-| M1.5 | Repositórios **em memória** (`adapters/memory`) usados pelos testes | M | ⬜ |
+| M1.5 | Repositórios **em memória** (`adapters/memory`) usados pelos testes | M | ✅ |
 | M1.6 | Serviço `registrar_movimento` com política de saldo negativo (INV-05) e atomicidade via UoW | M | ⬜ |
 | M1.7 | Serviço de saldo por item/local/lote e **saldo em uma data** (INV-01, INV-08) | M | ⬜ |
 | M1.8 | Transferência atômica (INV-03) | P | ⬜ |
@@ -641,6 +641,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M1.5 concluída.** Feito: pacote `adapters` (na distribuição, no mypy, na cobertura e em `root_packages` do import-linter); contrato `adapters-sem-apps` **ativado**, proibindo também `core.services` (§6.2: adaptador usa só portas e domínio); a sentinela copia `adapters` e ganhou 2 casos (adaptador importando `apps` e `core.services`). `adapters/memory`: `MemoryState` (dicionários + lista do livro), repositórios com as regras das portas (`NotFoundError`, `ConflictError`, SKU único em `add`/`update`, `list` ordenado; livro filtrável e ordenado por data e, no empate, por lançamento; `transfer_pair`) e `MemoryUnitOfWork`: várias UoWs compartilham o estado confirmado, cada bloco `with` trabalha numa cópia; `commit` publica, `rollback`/sair sem `commit`/exceção descartam; usar fora do `with` e aninhar dão erro. `adapters/clock.py`: `SystemClock` (UTC) e `FixedClock` (exige fuso, só anda para frente). 20 testes novos, incluindo propriedade que compara o livro com um modelo sob sequências aleatórias de lançamento/commit/rollback; cobertura total 100%. **Mutações:** sair grava sem commit (4 testes caem), filtro "até" exclusivo, SKU sem unicidade e commit sem recopiar o rascunho — pegas. Uma mutação **sobreviveu** (commit sem `.copy()`): era redundante, porque o `_begin` seguinte já recopia; código simplificado e comentado. Também removido `new_lot_id`, criado na M1.3 sem uso (a cobertura acusou): volta com o lote na M1.9. O push da M1.4 falhou uma vez por erro momentâneo do GitHub; repetido, CI verde. |
 | 2026-10-27 | **M1.4 concluída.** Feito: `core/ports/clock.py` (`Clock.now()` com fuso, em UTC), `core/ports/repositories.py` (`Repository[E, K]` genérico com `get`/`add`/`update`/`list`; `ItemRepository` com `find_by_sku`; categorias, locais e partes; `MovementRepository` só com `append`, `get`, `list` filtrável por item/local/lote/até uma data e `transfer_pair`) e `core/ports/unit_of_work.py` (repositórios + `commit`/`rollback`; sair sem `commit` desfaz). Semântica de cada método escrita nas docstrings (o que levanta `NotFoundError`/`ConflictError`, ordem do `list`), para a suíte de contrato da M2.6 cobrar. Erros novos: `NotFoundError`, `ConflictError`. 11 testes: membros exatos de cada porta (livro sem `update`/`delete` — INV-02 por construção, RF-005; nenhum cadastro com `delete`), implementação mínima usada como um serviço usaria, e o mypy rodando sobre 3 trechos (UoW completa passa; `commit` com assinatura errada e classe vazia são recusados). **Mutações:** `delete` no livro e `UnitOfWork` sem `commit` — ambas pegas. CI da M1.3 verde na `dev` antes de começar. **Achado no commit:** o gancho `pytest` do pre-commit roda num ambiente próprio sem mypy, e o teste novo falhou lá ("No module named mypy") — o mesmo caso do import-linter na M0.10; mypy 2.4.0 acrescentado ao gancho (versão conferida pelo teste de pins). Lições: (1) teste que chama uma ferramenta em subprocesso precisa dela também no ambiente do gancho; (2) gerar código Python com `
 ` dentro de um script Python em heredoc vira quebra de linha real — escrever o trecho direto no arquivo. |
 | 2026-10-27 | **M1.3 concluída.** Feito: `core/domain/movement.py`. `MovementKind` com 9 tipos, cada um com direção fixa: entrada, saída, transferência (saída/entrada), ajuste (para mais/para menos), perda, devolução de cliente (entra) e devolução a fornecedor (sai). `Movement` imutável: item, local, quantidade **positiva** (`signed_quantity` dá o sinal pelo tipo), `occurred_at` com fuso e gravado em UTC, autor obrigatório, e opcionais lote, parte, custo unitário (`Decimal` ≥ 0, até 6 casas) e motivo — obrigatório em ajuste e perda. Transferência: `make_transfer` monta o par com o mesmo `transfer_id` e `check_transfer_pair` confere um par lido (tipos opostos, mesmo item/lote/quantidade/data, locais diferentes); só transferência tem `transfer_id`. IDs novos: `LotId`, `MovementId`, `TransferId`. 73 testes novos (RF-005), com propriedades para o sinal e para a conservação no par (INV-03); cobertura do `core` 100%. **Mutações:** perda como entrada, perda sem motivo, data sem UTC, par sem comparar quantidade e quantidade zero aceita — todas pegas. CI da M1.2 verde na `dev` antes de começar. Lição: em teste que monta o objeto por um helper que já lê o campo (`kind`), o caso de tipo errado tem de passar por `replace`, que revalida. |
@@ -752,6 +753,9 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Nomes de código em **inglês** no domínio (`UnitOfMeasure`, `Dimension`, `Quantity`), mesmo onde o roadmap escreveu em PT-BR (`UnidadeDeMedida`); o glossário liga termo ↔ código | Regra do §2 (identificadores em inglês, interface em PT-BR); o roadmap usa nomes de trabalho |
 | 2026-10-27 | Quantidades: 6 casas, 12 dígitos inteiros, conversão exata com um arredondamento half-even; operações só na mesma unidade (**ADR-006**) | Define o "arredondamento definido" da INV-04 e garante o mesmo resultado nas duas plataformas (RNF-004) |
 | 2026-10-27 | Embalagem (caixa com 12) é uma unidade de **contagem** comum, sem conversão por item | Mais simples; caixas de tamanhos diferentes viram unidades diferentes. *Hipótese* de que basta — reavaliar na M1.2 (`Item`) e na M1.12 (perfis) |
+| 2026-10-27 | `adapters-sem-apps` proíbe também `core.services` | §6.2 já dizia que adaptadores importam só `core.ports`/`core.domain`; agora é fiscalizado |
+| 2026-10-27 | UoW em memória com estado confirmado compartilhado e rascunho por bloco | Imita várias conexões a um banco: só o `commit` publica, e os testes de atomicidade (M1.6, M1.8) ficam honestos antes do SQLite |
+| 2026-10-27 | `FixedClock` e `SystemClock` em `adapters/clock.py` (fora de `memory`) | Relógio não é armazenamento; os dois servem a qualquer combinação de adaptadores |
 | 2026-10-27 | Nenhum repositório tem `delete`; cadastro se **inativa** | Movimentações antigas apontam para itens, locais e partes; apagar quebraria o histórico (INV-02, RF-012) |
 | 2026-10-27 | `get` nunca devolve `None` (levanta `NotFoundError`); `find_by_sku` é a única busca que devolve `None` | Ausência inesperada vira erro de domínio claro; busca por código lido no scanner é o caso em que "não achou" é normal |
 | 2026-10-27 | Portas descrevem o comportamento nas docstrings; quem cobra é a suíte de contrato (M2.6). Na M1.4 os testes cobram a **forma** das portas | Interface sem implementação não tem comportamento para testar; a memória (M1.5) e o SQLite (M2) passam pelo mesmo contrato |
