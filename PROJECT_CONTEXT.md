@@ -52,9 +52,9 @@
 
 | Campo | Valor |
 |---|---|
-| Milestone aberto | **M1 — Núcleo de domínio** (1 de 14 etapas) |
-| Última etapa concluída | **M1.1** — `Quantity`, `UnitOfMeasure` e `Dimension` com conversão exata e um único arredondamento (ADR-006); RF-010 atendido (2026-10-27) |
-| Próxima etapa | **M1.2** — entidades `Item`, `Categoria`, `Local` (hierarquia) e `Parte`, com validações |
+| Milestone aberto | **M1 — Núcleo de domínio** (2 de 14 etapas) |
+| Última etapa concluída | **M1.2** — entidades `Item`, `Category`, `Location` (+ `LocationTree`) e `Party`, imutáveis e validadas; lacunas RF-002/RF-003 fechadas (2026-10-27) |
+| Próxima etapa | **M1.3** — `Movimentacao` imutável e seus tipos (entrada, saída, transferência, ajuste, perda, devolução) |
 | Bloqueios | Nenhum |
 | Último portão aprovado | **M0** — 2026-10-27, 6 de 6 casos, BUG-01 achado e corrigido (§11) |
 | Versão | **0.0.1** — tag `v0.0.1` na `main` ([KaueChristian/StocKit](https://github.com/KaueChristian/StocKit)) |
@@ -353,7 +353,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | ID | Etapa | Tam. | Status |
 |---|---|---|---|
 | M1.1 | Value objects: `Quantity` (`Decimal` + unidade), `UnidadeDeMedida` e conversões (INV-04) | M | ✅ (no código: `UnitOfMeasure`, ver §19) |
-| M1.2 | Entidades `Item`, `Categoria`, `Local` (hierarquia), `Parte` com validações | M | ⬜ |
+| M1.2 | Entidades `Item`, `Categoria`, `Local` (hierarquia), `Parte` com validações | M | ✅ (`Category`, `Location`, `Party` no código) |
 | M1.3 | `Movimentacao` imutável e tipos (entrada, saída, transferência, ajuste, perda, devolução) | M | ⬜ |
 | M1.4 | Portas: repositórios, `UnitOfWork`, `Clock` (`Protocol`) | P | ⬜ |
 | M1.5 | Repositórios **em memória** (`adapters/memory`) usados pelos testes | M | ⬜ |
@@ -382,6 +382,8 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | TP-M1-09 ★ | Custo médio móvel: entradas a custos diferentes e saída | Valor igual ao calculado à mão (planilha anexa em `docs/test-plan/`) |
 | TP-M1-10 ★ | Cobertura do `core` | ≥ 90% (RNF-001) |
 | TP-M1-11 | Regressão do portão M0 | Verde |
+| TP-M1-12 | Hierarquia de 3 níveis (depósito › corredor › prateleira); mover um local para dentro do próprio descendente; dois irmãos com o mesmo nome (maiúsculas diferentes) | Caminho completo correto; ciclo e nome repetido recusados com erro de domínio (RF-002) |
+| TP-M1-13 | Parte com cada papel e com dois papéis; papel inválido; sem papel; nome vazio | Válidas aceitas; inválidas recusadas com erro de domínio que cita o campo (RF-003) |
 
 **Saída:** portão aprovado, `v0.1.0`, ADRs novos registrados, requisitos RF-004..RF-011 com teste vinculado.
 
@@ -639,6 +641,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M1.2 concluída.** Feito: `core/domain/{ids,entity,catalog,location,party}.py`. IDs são UUIDs com tipo próprio por entidade (`ItemId`, `LocationId`…); entidades são dataclasses congeladas com igualdade por tipo + `id`; editar = `dataclasses.replace`, que valida de novo. `Item`: SKU sem espaços e em maiúsculas (letras, dígitos, `. _ / -`, até 64), nome até 200, tipo (`ItemKind`), unidade base, categoria opcional, `tracks_lots`/`tracks_expiry`/`active`; validade exige lote; serializado exige contagem com fator 1. `Category` simples. `Location` conhece só o pai; `LocationTree` recusa pai inexistente, ciclo e irmãos com o mesmo nome (sem diferenciar maiúsculas), e dá `path`, `full_name` ("Depósito › Corredor A › Prateleira 3"), `children` e `descendants`. `Party` com um ou mais papéis (`PartyRole`). Erros novos: `ValidationError` (com o campo) e `HierarchyError`. 78 testes novos (RF-001, RF-002, RF-003), com propriedades do hypothesis sobre florestas aleatórias de locais; cobertura do `core` 100%. **Prova de que os testes pegam erro:** 4 mutações (sem checagem de ciclo, nomes sem `casefold`, validade sem lote, serializado com qualquer contagem) — todas derrubaram testes. Lacunas RF-002 e RF-003 fechadas com TP-M1-12 e TP-M1-13. CI da M1.1 verde na `dev` antes de começar. Lição: o ruff marca "›" como caractere ambíguo; liberado em `allowed-confusables`, como o "×". |
 | 2026-10-27 | **M1.1 concluída.** Feito: `core/domain/quantity.py` com `Dimension` (contagem, massa, volume, comprimento), `UnitOfMeasure` (símbolo, nome, grandeza, fator para a base) e `Quantity` (`Decimal` até 6 casas e 12 dígitos inteiros; conversão `to()`; soma, subtração, negação e comparação só na mesma unidade); catálogo `STANDARD_UNITS` (un, dz, kg, g, mg, L, mL, m, cm, mm); `core/domain/errors.py` com `DomainError` e três erros específicos. 54 testes novos ligados ao RF-010, com propriedades do hypothesis para a INV-04 (limite de ida e volta, ida e volta exata para unidade divisível, arredondamento único) — verdes nos perfis `dev` e `ci`; cobertura do `core` 100%. **Prova de que os testes pegam erro:** trocar half-even por "meio para cima" derrubou o teste do caso do meio; arredondar para 5 casas derrubou 6 testes. Decisões: ADR-006 (escala e arredondamento) e nomes em inglês (§19). **Achado ao gerar a matriz:** BUG-02 (redirecionar a matriz para arquivo quebrava no Windows), corrigido em commit próprio. Lição: o caso do meio exato precisa de teste de exemplo; propriedades com limite de erro não distinguem half-even de half-up. |
 | 2026-10-27 | **M0 fechado — `v0.0.1`.** A pedido do usuário: versão do `pyproject.toml` 0.0.0 → 0.0.1, `main` avançada até a `dev` por fast-forward (sem commit de merge; histórico igual nas duas) e tag anotada `v0.0.1` publicada. CI verde na `dev` antes de mover a `main`. Milestone aberto passa a ser o M1. Lição: nenhuma nova. |
 | 2026-10-27 | **Portão M0 aprovado (execução 2, GitHub).** Repositório criado **público** em `KaueChristian/StocKit` a pedido do usuário; `main` e `dev` publicadas. **Achado:** o 1º CI da `dev` falhou só no Windows — `tools/check.py` quebrou com `FileNotFoundError` ao chamar `lint-imports`. **Causa (fato, pelo log e pelo código):** o script procurava executáveis ao lado do `python.exe`, o que só vale num venv; no runner, que usa o Python sem venv, eles ficam em `Scripts\`. Localmente nunca apareceu porque o check sempre rodou no `.venv`. **Correção** (`4d6867b`, BUG-01): caminho via `sysconfig.get_path("scripts")`; ferramenta ausente vira "FALHA" no resumo em vez de traceback; 2 testes novos. CI da `dev` verde nos dois sistemas. **TP-M0-02 (CI):** PR #1 com `import tkinter` usado → `check` falhou no Ubuntu e no Windows pelo contrato `core-puro`. **TP-M0-03:** sem o import, 3 jobs verdes; PR fechado sem merge e branch apagada. Os commits da branch de teste foram feitos pela API do GitHub, para o import chegar ao CI sem pular ganchos locais. **TP-M0-04:** os dois C4 renderizam no GitHub. Resultado: **6 de 6, go.** Lições: (1) o CI em outro SO e sem venv achou um defeito que nenhum teste local podia achar — vale para o empacotamento (M3); (2) IDs de bug passam a usar `BUG-xx`, porque `B-xx` já é do backlog (§12). Pendente: tag `v0.0.1` e merge na `main`, só com pedido do usuário. |
@@ -746,6 +749,11 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Nomes de código em **inglês** no domínio (`UnitOfMeasure`, `Dimension`, `Quantity`), mesmo onde o roadmap escreveu em PT-BR (`UnidadeDeMedida`); o glossário liga termo ↔ código | Regra do §2 (identificadores em inglês, interface em PT-BR); o roadmap usa nomes de trabalho |
 | 2026-10-27 | Quantidades: 6 casas, 12 dígitos inteiros, conversão exata com um arredondamento half-even; operações só na mesma unidade (**ADR-006**) | Define o "arredondamento definido" da INV-04 e garante o mesmo resultado nas duas plataformas (RNF-004) |
 | 2026-10-27 | Embalagem (caixa com 12) é uma unidade de **contagem** comum, sem conversão por item | Mais simples; caixas de tamanhos diferentes viram unidades diferentes. *Hipótese* de que basta — reavaliar na M1.2 (`Item`) e na M1.12 (perfis) |
+| 2026-10-27 | Entidades imutáveis (dataclass congelada) com identidade por tipo + `id`; edição por `dataclasses.replace` | Nada muda "por baixo" de um repositório ou Unit of Work; a validação roda em toda versão nova; comparar duas versões da mesma entidade é trivial |
+| 2026-10-27 | IDs = UUID gerado no domínio, com `NewType` por entidade | Desktop e web criam IDs sem coordenação (paridade, futura sincronização B-01); mypy impede trocar ID de local por ID de item. O dataset demo pode passar IDs fixos |
+| 2026-10-27 | SKU normalizado para **maiúsculas**, sem espaços | Busca e leitor de código de barras não dependem de caixa; unicidade simples (garantida no repositório, M1.5) |
+| 2026-10-27 | Regras que dependem do **conjunto** de locais (ciclo, pai existente, nome entre irmãos) ficam em `LocationTree`, não no `Location` | Um local sozinho não sabe se forma ciclo; a árvore é o ponto único de validação, usado pelos serviços e pelo saldo por local (INV-08) |
+| 2026-10-27 | Categoria sem hierarquia; ponto de reposição e campos personalizados fora do `Item` por enquanto | O documento não pede categoria hierárquica; ponto de reposição é do M4 (RF-018) e campos personalizados da M1.11 — entram nas etapas deles |
 | 2026-10-27 | Base de erros de domínio (`DomainError` e três subclasses) criada já na M1.1 | A conversão precisa recusar valores; a M1.13 completa a hierarquia em vez de começar do zero |
 | 2026-10-27 | Ao fechar milestone, a `main` recebe a `dev` por **fast-forward**, e a tag é **anotada** e fica na `main` | A `main` só recebe trabalho já aprovado no portão, então não há divergência a mesclar; a tag anotada guarda data e autor do fechamento |
 | 2026-10-27 | IDs de bug no §15 usam `BUG-xx` | `B-xx` já identifica o backlog (§12) |

@@ -20,3 +20,15 @@ class InvalidQuantityError(DomainError):
 
 class IncompatibleUnitsError(DomainError):
     """Operação entre unidades diferentes, ou conversão entre grandezas diferentes."""
+
+
+class ValidationError(DomainError):
+    """Campo de entidade com valor inválido. ``field`` é o nome do atributo no código."""
+
+    def __init__(self, field: str, message: str) -> None:
+        super().__init__(message)
+        self.field = field
+
+
+class HierarchyError(DomainError):
+    """Hierarquia de locais inconsistente: ciclo, pai inexistente ou nome repetido entre irmãos."""

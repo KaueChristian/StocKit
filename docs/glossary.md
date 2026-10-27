@@ -8,14 +8,17 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | Termo | Significado | No código |
 |---|---|---|
 | **Item** | Qualquer coisa controlada em estoque (produto, insumo, ativo, peça) | `Item` |
-| **SKU** | Código único que identifica um item | `sku` |
+| **Tipo de item** | Revenda, consumível, ativo ou serializado | `ItemKind` |
+| **Categoria** | Agrupamento simples de itens (sem hierarquia) | `Category` |
+| **SKU** | Código único que identifica um item; sem espaços, gravado em maiúsculas | `sku` |
 | **Unidade de medida** | Símbolo, nome, grandeza e fator para a unidade base da grandeza (kg = 1; g = 0,001; caixa com 12 = 12 un) | `UnitOfMeasure` |
 | **Grandeza** | Tipo de medida: contagem, massa, volume ou comprimento; só se converte dentro da mesma | `Dimension` |
 | **Quantidade** | Valor `Decimal` (até 6 casas, até 12 dígitos inteiros) numa unidade; conversão arredonda uma vez, half-even (ADR-006) | `Quantity` |
-| **Local** | Lugar onde há saldo; hierárquico (depósito › corredor › prateleira) | — |
-| **Parte** | Fornecedor, cliente ou setor; o papel é configurável | — |
+| **Local** | Lugar onde há saldo; hierárquico (depósito › corredor › prateleira) | `Location` |
+| **Hierarquia de locais** | Conjunto de locais sem ciclo e sem irmãos com o mesmo nome; dá o caminho completo e os descendentes | `LocationTree` |
+| **Parte** | Fornecedor, cliente ou setor; pode ter mais de um papel; o rótulo do papel vem do perfil | `Party`, `PartyRole` |
 | **Lote** | Grupo de unidades de um item com código e validade; base do FEFO | — |
-| **Item serializado** | Item controlado por unidade, cada uma com número de série único | — |
+| **Item serializado** | Item controlado por unidade, cada uma com número de série único; unidade base de contagem com fator 1 | `ItemKind.SERIALIZED` |
 | **Movimentação** | Registro imutável de entrada, saída, transferência, ajuste, perda ou devolução | — |
 | **Livro (ledger)** | Sequência de movimentações da qual o saldo é derivado | — |
 | **Saldo** | Soma assinada das movimentações de (item, local, lote); nunca é armazenado como verdade | — |

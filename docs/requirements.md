@@ -18,9 +18,9 @@ Status: `Planejado` · `Em andamento` · `Atendido` (teste verde ligado) · `Des
 
 | ID | Requisito | Milestone | Invariantes | Portão | Status |
 |---|---|---|---|---|---|
-| RF-001 | Cadastrar, editar, inativar e buscar itens | M1/M3/M6 | — | TP-M3-02, TP-M6-01 | Planejado |
-| RF-002 | Cadastrar hierarquia de locais | M1/M3/M6 | INV-08 | — (lacuna) | Planejado |
-| RF-003 | Cadastrar partes (fornecedor/cliente/setor) | M1/M3/M6 | — | — (lacuna) | Planejado |
+| RF-001 | Cadastrar, editar, inativar e buscar itens | M1/M3/M6 | — | TP-M3-02, TP-M6-01 | Em andamento (M1.2: entidade e regras) |
+| RF-002 | Cadastrar hierarquia de locais | M1/M3/M6 | INV-08 | TP-M1-12, TP-M1-02 | Em andamento (M1.2: entidade e árvore) |
+| RF-003 | Cadastrar partes (fornecedor/cliente/setor) | M1/M3/M6 | — | TP-M1-13 | Em andamento (M1.2: entidade e papéis) |
 | RF-004 | Definir campos personalizados por tipo de item e validá-los | M1/M3/M6 | — | TP-M1-07 | Planejado |
 | RF-005 | Registrar entrada, saída, transferência, ajuste e perda | M1/M3/M6 | INV-02, INV-03 | TP-M1-01, TP-M1-02, TP-M3-02 | Planejado |
 | RF-006 | Calcular saldo por item, local e lote, inclusive "em uma data" | M1 | INV-01, INV-08 | TP-M1-01, TP-M1-02, TP-M3-02 | Planejado |
@@ -65,7 +65,5 @@ primeiro milestone em que aparece:
 
 | ID | Primeiro milestone | Sugestão de caso |
 |---|---|---|
-| RF-002 | M1 | Criar hierarquia de 3 níveis; impedir ciclo (local pai de si mesmo); saldo por local soma no total (INV-08) |
-| RF-003 | M1 | Cadastrar parte com cada papel; papel inválido rejeitado |
 | RF-016 | M3 | KPIs do dashboard == valores calculados pelos serviços sobre o dataset demo |
 | RF-019 | M4 | Dataset com item abaixo do mínimo, lote a vencer e item parado: cada alerta aparece uma vez |
