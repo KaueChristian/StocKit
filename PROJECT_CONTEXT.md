@@ -52,9 +52,9 @@
 
 | Campo | Valor |
 |---|---|
-| Milestone aberto | **M1 — Núcleo de domínio** (5 de 14 etapas) |
-| Última etapa concluída | **M1.5** — adaptadores em memória (repositórios, `MemoryUnitOfWork` transacional) e relógios `SystemClock`/`FixedClock`; contrato `adapters-sem-apps` ativo (2026-10-27) |
-| Próxima etapa | **M1.6** — serviço `registrar_movimento` com política de saldo negativo (INV-05) e atomicidade via UoW |
+| Milestone aberto | **M1 — Núcleo de domínio** (6 de 14 etapas) |
+| Última etapa concluída | **M1.6** — serviço `record_movement`: cadastros conferidos, unidade base sem arredondar, política de saldo negativo na linha do tempo toda, gravação atômica (2026-10-27) |
+| Próxima etapa | **M1.7** — serviço de saldo por item/local/lote e saldo em uma data (INV-01, INV-08) |
 | Bloqueios | Nenhum |
 | Último portão aprovado | **M0** — 2026-10-27, 6 de 6 casos, BUG-01 achado e corrigido (§11) |
 | Versão | **0.0.1** — tag `v0.0.1` na `main` ([KaueChristian/StocKit](https://github.com/KaueChristian/StocKit)) |
@@ -357,7 +357,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | M1.3 | `Movimentacao` imutável e tipos (entrada, saída, transferência, ajuste, perda, devolução) | M | ✅ (`Movement` no código) |
 | M1.4 | Portas: repositórios, `UnitOfWork`, `Clock` (`Protocol`) | P | ✅ |
 | M1.5 | Repositórios **em memória** (`adapters/memory`) usados pelos testes | M | ✅ |
-| M1.6 | Serviço `registrar_movimento` com política de saldo negativo (INV-05) e atomicidade via UoW | M | ⬜ |
+| M1.6 | Serviço `registrar_movimento` com política de saldo negativo (INV-05) e atomicidade via UoW | M | ✅ (`record_movement` no código) |
 | M1.7 | Serviço de saldo por item/local/lote e **saldo em uma data** (INV-01, INV-08) | M | ⬜ |
 | M1.8 | Transferência atômica (INV-03) | P | ⬜ |
 | M1.9 | Lotes e validade; **FEFO** na saída sem lote informado (INV-06) | M | ⬜ |
@@ -641,6 +641,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M1.6 concluída.** Feito: `core/services/movements.py` com `RecordMovement` (pedido) e `record_movement(uow, clock, pedido, policy=FORBID)`: recusa transferência (serviço próprio, M1.8), item/local/parte inexistente (`NotFoundError`) ou inativo (`InactiveRecordError`), lote em item sem lote e item com lote sem lote; converte a quantidade para a unidade base e **recusa conversão que arredondaria** (1 un num item em caixa com 12); carimba `recorded_at` com o `Clock` (data futura cai na regra `occurred_at ≤ recorded_at`); com `FORBID`, simula o livro e recusa (`InsufficientStockError`) se **qualquer ponto a partir da movimentação** ficar negativo — inclusive saída retroativa que estoura um ponto posterior; grava e faz `commit` na UoW (erro = nada gravado). Domínio: `NegativeStockPolicy`, `ledger.py` (`balance`, `in_ledger_order`, `first_negative_from`), `Movement.recorded_at`. `str(Quantity)` agora sem zeros à direita (a mensagem saía "-2.000000 un"). 41 testes novos (RF-005, RF-006, RF-007, RF-010), com propriedade da INV-05: sequências aleatórias de entradas, saídas, perdas e ajustes retroativos nunca deixam o livro gravado negativo em ponto nenhum — base do TP-M1-04; cobertura total 100%. **Mutações:** política ignorada (10 testes caem), conferir só na data da saída, nova movimentação antes no empate, aceitar conversão que arredonda, sem `commit` (11), sem `recorded_at` e local inativo aceito — as 7 pegas. CI da M1.5 verde na `dev` antes de começar. Risco novo R-10 (conferir-e-gravar concorrente). |
 | 2026-10-27 | **M1.5 concluída.** Feito: pacote `adapters` (na distribuição, no mypy, na cobertura e em `root_packages` do import-linter); contrato `adapters-sem-apps` **ativado**, proibindo também `core.services` (§6.2: adaptador usa só portas e domínio); a sentinela copia `adapters` e ganhou 2 casos (adaptador importando `apps` e `core.services`). `adapters/memory`: `MemoryState` (dicionários + lista do livro), repositórios com as regras das portas (`NotFoundError`, `ConflictError`, SKU único em `add`/`update`, `list` ordenado; livro filtrável e ordenado por data e, no empate, por lançamento; `transfer_pair`) e `MemoryUnitOfWork`: várias UoWs compartilham o estado confirmado, cada bloco `with` trabalha numa cópia; `commit` publica, `rollback`/sair sem `commit`/exceção descartam; usar fora do `with` e aninhar dão erro. `adapters/clock.py`: `SystemClock` (UTC) e `FixedClock` (exige fuso, só anda para frente). 20 testes novos, incluindo propriedade que compara o livro com um modelo sob sequências aleatórias de lançamento/commit/rollback; cobertura total 100%. **Mutações:** sair grava sem commit (4 testes caem), filtro "até" exclusivo, SKU sem unicidade e commit sem recopiar o rascunho — pegas. Uma mutação **sobreviveu** (commit sem `.copy()`): era redundante, porque o `_begin` seguinte já recopia; código simplificado e comentado. Também removido `new_lot_id`, criado na M1.3 sem uso (a cobertura acusou): volta com o lote na M1.9. O push da M1.4 falhou uma vez por erro momentâneo do GitHub; repetido, CI verde. |
 | 2026-10-27 | **M1.4 concluída.** Feito: `core/ports/clock.py` (`Clock.now()` com fuso, em UTC), `core/ports/repositories.py` (`Repository[E, K]` genérico com `get`/`add`/`update`/`list`; `ItemRepository` com `find_by_sku`; categorias, locais e partes; `MovementRepository` só com `append`, `get`, `list` filtrável por item/local/lote/até uma data e `transfer_pair`) e `core/ports/unit_of_work.py` (repositórios + `commit`/`rollback`; sair sem `commit` desfaz). Semântica de cada método escrita nas docstrings (o que levanta `NotFoundError`/`ConflictError`, ordem do `list`), para a suíte de contrato da M2.6 cobrar. Erros novos: `NotFoundError`, `ConflictError`. 11 testes: membros exatos de cada porta (livro sem `update`/`delete` — INV-02 por construção, RF-005; nenhum cadastro com `delete`), implementação mínima usada como um serviço usaria, e o mypy rodando sobre 3 trechos (UoW completa passa; `commit` com assinatura errada e classe vazia são recusados). **Mutações:** `delete` no livro e `UnitOfWork` sem `commit` — ambas pegas. CI da M1.3 verde na `dev` antes de começar. **Achado no commit:** o gancho `pytest` do pre-commit roda num ambiente próprio sem mypy, e o teste novo falhou lá ("No module named mypy") — o mesmo caso do import-linter na M0.10; mypy 2.4.0 acrescentado ao gancho (versão conferida pelo teste de pins). Lições: (1) teste que chama uma ferramenta em subprocesso precisa dela também no ambiente do gancho; (2) gerar código Python com `
 ` dentro de um script Python em heredoc vira quebra de linha real — escrever o trecho direto no arquivo. |
@@ -706,6 +707,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | R-07 | PyInstaller disparando antivírus/SmartScreen | Checksum no release, instruções no README; assinatura só se valer o custo |
 | R-08 | SQLite concorrente (web + várias abas) | WAL + `busy_timeout` no desktop; na web, banco do Django em Postgres se um dia houver uso real |
 | R-09 | `float` escapando em quantidades/custos | Tipos `Decimal` no domínio; teste de propriedade e mypy estrito |
+| R-10 | Duas saídas simultâneas passam pela conferência de saldo antes de qualquer uma gravar (conferir-e-gravar) | Na memória não há concorrência; no SQLite a UoW abre transação com `BEGIN IMMEDIATE` (M2.5) e a suíte de contrato testa duas UoWs concorrentes; na web, transação `SELECT ... FOR UPDATE`/serializável (M5) |
 
 ---
 
@@ -753,6 +755,13 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Nomes de código em **inglês** no domínio (`UnitOfMeasure`, `Dimension`, `Quantity`), mesmo onde o roadmap escreveu em PT-BR (`UnidadeDeMedida`); o glossário liga termo ↔ código | Regra do §2 (identificadores em inglês, interface em PT-BR); o roadmap usa nomes de trabalho |
 | 2026-10-27 | Quantidades: 6 casas, 12 dígitos inteiros, conversão exata com um arredondamento half-even; operações só na mesma unidade (**ADR-006**) | Define o "arredondamento definido" da INV-04 e garante o mesmo resultado nas duas plataformas (RNF-004) |
 | 2026-10-27 | Embalagem (caixa com 12) é uma unidade de **contagem** comum, sem conversão por item | Mais simples; caixas de tamanhos diferentes viram unidades diferentes. *Hipótese* de que basta — reavaliar na M1.2 (`Item`) e na M1.12 (perfis) |
+| 2026-10-27 | Serviços com nomes em inglês (`record_movement`, `RecordMovement`) | Mesma regra do §2 aplicada às entidades; o roadmap usa nomes de trabalho |
+| 2026-10-27 | Política de saldo negativo entra como **parâmetro** do serviço (padrão `FORBID`) até a configuração do sistema (M1.12) | INV-05 testável já; a M1.12 só passa a ler o valor da configuração |
+| 2026-10-27 | Saldo conferido em **toda a linha do tempo** a partir da movimentação, não só no fim | Saída retroativa coberta na data dela pode deixar negativo um dia posterior; o extrato e o "saldo em uma data" (RF-006) mostrariam número negativo que a política proíbe |
+| 2026-10-27 | Conversão de unidade no registro precisa ser **exata**; se arredondaria, o registro é recusado | O livro é a verdade (ADR-004): guardar 0,083333 cx no lugar de 1 un perde valor para sempre |
+| 2026-10-27 | `recorded_at` na movimentação (confirma a hipótese da M1.3); data futura recusada | Auditoria de lançamento retroativo; `occurred_at ≤ recorded_at` impede lançar o futuro sem regra extra |
+| 2026-10-27 | Item/local/parte inativos não recebem movimentação nova | Inativar é "não usar mais"; o histórico continua visível |
+| 2026-10-27 | Item com lote exige lote em toda movimentação até a M1.9; existência do lote não é conferida ainda | FEFO (saída sem lote) e a entidade `Lote` chegam juntos na M1.9 |
 | 2026-10-27 | `adapters-sem-apps` proíbe também `core.services` | §6.2 já dizia que adaptadores importam só `core.ports`/`core.domain`; agora é fiscalizado |
 | 2026-10-27 | UoW em memória com estado confirmado compartilhado e rascunho por bloco | Imita várias conexões a um banco: só o `commit` publica, e os testes de atomicidade (M1.6, M1.8) ficam honestos antes do SQLite |
 | 2026-10-27 | `FixedClock` e `SystemClock` em `adapters/clock.py` (fora de `memory`) | Relógio não é armazenamento; os dois servem a qualquer combinação de adaptadores |

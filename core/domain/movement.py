@@ -9,7 +9,8 @@ Transferência é um **par** (saída no local de origem + entrada no destino) li
 ``check_transfer_pair`` confere um par lido de algum lugar.
 
 Fica para os serviços (M1.6): converter a quantidade para a unidade base do item, conferir política
-de saldo negativo (INV-05) e carimbar a hora com o ``Clock``.
+de saldo negativo (INV-05) e carimbar ``recorded_at`` com o ``Clock``. ``occurred_at`` é quando
+aconteceu; ``recorded_at``, quando foi lançado (auditoria de lançamento retroativo).
 """
 
 from dataclasses import dataclass, field
@@ -91,6 +92,7 @@ class Movement(Entity):
     unit_cost: Decimal | None = None
     reason: str | None = None
     transfer_id: TransferId | None = None
+    recorded_at: datetime | None = None
     id: MovementId = field(default_factory=new_movement_id)
 
     def __post_init__(self) -> None:
@@ -112,7 +114,13 @@ class Movement(Entity):
                 f"a quantidade de uma movimentação precisa ser positiva: {self.quantity} "
                 "(o tipo é que diz se entra ou sai)",
             )
-        set_field(self, "occurred_at", _utc(self.occurred_at))
+        set_field(self, "occurred_at", _utc(self.occurred_at, "occurred_at"))
+        if self.recorded_at is not None:
+            set_field(self, "recorded_at", _utc(self.recorded_at, "recorded_at"))
+            if self.recorded_at < self.occurred_at:
+                raise ValidationError(
+                    "occurred_at", "a movimentação não pode ter ocorrido depois de ser registrada"
+                )
         set_field(self, "author", clean_text(self.author, "author", "autor", max_length=120))
         set_field(self, "unit_cost", _clean_cost(self.unit_cost))
         set_field(self, "reason", _clean_reason(self.reason, self.kind))
@@ -134,12 +142,12 @@ class Movement(Entity):
         return self.quantity if self.direction is Direction.IN else -self.quantity
 
 
-def _utc(value: object) -> datetime:
+def _utc(value: object, field: str) -> datetime:
     if not isinstance(value, datetime):
-        raise ValidationError("occurred_at", f"data da movimentação inválida: {value!r}")
+        raise ValidationError(field, f"data da movimentação inválida: {value!r}")
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValidationError(
-            "occurred_at", "data da movimentação precisa de fuso horário (gravada em UTC)"
+            field, "data da movimentação precisa de fuso horário (gravada em UTC)"
         )
     return value.astimezone(UTC)
 

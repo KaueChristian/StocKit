@@ -26,7 +26,9 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Saldo em uma data** | Saldo considerando só as movimentações ocorridas até aquele instante | — |
 | **Ajuste** | Movimentação que corrige o saldo (nunca se edita uma movimentação antiga); exige motivo | `ADJUSTMENT_IN`, `ADJUSTMENT_OUT` |
 | **Transferência** | Par atômico saída + entrada entre dois locais, ligado por `transfer_id`; conserva a quantidade total | `make_transfer`, `check_transfer_pair` |
-| **Política de saldo negativo** | Configuração que proíbe (padrão) ou permite saída acima do saldo | — |
+| **Política de saldo negativo** | Configuração que proíbe (padrão) ou permite saída acima do saldo; conferida em toda a linha do tempo a partir da movimentação | `NegativeStockPolicy` |
+| **Registro de movimentação** | Serviço único que lança entrada, saída, ajuste, perda e devolução: confere cadastros, converte para a unidade base e aplica a política | `record_movement` |
+| **Data de ocorrência / de registro** | Quando o fato aconteceu / quando foi lançado no sistema; lançamento retroativo tem as duas diferentes | `occurred_at`, `recorded_at` |
 | **FEFO** | *First Expired, First Out*: sai primeiro o lote que vence primeiro | — |
 | **Campo personalizado** | Campo extra definido por tipo de item (nome, tipo, obrigatório, validação), guardado em JSON | — |
 | **Perfil** | JSON que pré-configura rótulos, campos e unidades de um tipo de negócio | — |

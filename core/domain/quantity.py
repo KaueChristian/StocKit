@@ -162,7 +162,8 @@ class Quantity:
         return a < b
 
     def __str__(self) -> str:
-        return f"{self.value} {self.unit}"
+        """Valor sem zeros à direita e sem notação científica: ``2 un``, ``0.25 kg``, ``100 g``."""
+        return f"{self.value.normalize():f} {self.unit}"
 
 
 def _unit(symbol: str, name: str, dimension: Dimension, factor: str) -> UnitOfMeasure:

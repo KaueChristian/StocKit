@@ -292,3 +292,18 @@ def test_pair_check_refuses_same_location() -> None:
     outgoing, incoming = transfer()
     with pytest.raises(ValidationError, match="origem igual"):
         check_transfer_pair(outgoing, replace(incoming, location_id=SHOP))
+
+
+def test_recorded_at_is_optional_utc_and_not_before_occurrence() -> None:
+    assert make().recorded_at is None
+    sao_paulo = timezone(timedelta(hours=-3))
+    later = make(recorded_at=datetime(2026, 10, 27, 11, tzinfo=sao_paulo))
+    assert later.recorded_at == WHEN + timedelta(minutes=30)
+    assert later.recorded_at is not None
+    assert later.recorded_at.tzinfo is UTC
+    with pytest.raises(ValidationError, match="depois de ser registrada") as error:
+        make(recorded_at=WHEN - timedelta(seconds=1))
+    assert error.value.field == "occurred_at"
+    with pytest.raises(ValidationError) as naive:
+        make(recorded_at=datetime(2026, 10, 27, 14))  # noqa: DTZ001
+    assert naive.value.field == "recorded_at"

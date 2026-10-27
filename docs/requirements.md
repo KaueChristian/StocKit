@@ -23,8 +23,8 @@ Status: `Planejado` · `Em andamento` · `Atendido` (teste verde ligado) · `Des
 | RF-003 | Cadastrar partes (fornecedor/cliente/setor) | M1/M3/M6 | — | TP-M1-13 | Em andamento (M1.2: entidade e papéis) |
 | RF-004 | Definir campos personalizados por tipo de item e validá-los | M1/M3/M6 | — | TP-M1-07 | Planejado |
 | RF-005 | Registrar entrada, saída, transferência, ajuste e perda | M1/M3/M6 | INV-02, INV-03 | TP-M1-01, TP-M1-02, TP-M3-02 | Em andamento (M1.3: movimentação e par de transferência) |
-| RF-006 | Calcular saldo por item, local e lote, inclusive "em uma data" | M1 | INV-01, INV-08 | TP-M1-01, TP-M1-02, TP-M3-02 | Planejado |
-| RF-007 | Impedir saldo negativo conforme política configurável | M1 | INV-05 | TP-M1-04, TP-M3-03, TP-M5-04 | Planejado |
+| RF-006 | Calcular saldo por item, local e lote, inclusive "em uma data" | M1 | INV-01, INV-08 | TP-M1-01, TP-M1-02, TP-M3-02 | Em andamento (M1.6: soma assinada no domínio; serviço na M1.7) |
+| RF-007 | Impedir saldo negativo conforme política configurável | M1 | INV-05 | TP-M1-04, TP-M3-03, TP-M5-04 | Em andamento (M1.6: política aplicada no registro; configuração na M1.12) |
 | RF-008 | Controlar lote e validade com saída FEFO | M1 | INV-06 | TP-M1-05 | Planejado |
 | RF-009 | Itens serializados (unidade única, estado) | M1 | INV-07 | TP-M1-06 | Planejado |
 | RF-010 | Conversão entre unidades de medida | M1 | INV-04 | TP-M1-03 | Atendido (M1.1; regras no ADR-006) |

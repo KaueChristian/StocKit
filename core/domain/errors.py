@@ -40,3 +40,11 @@ class NotFoundError(DomainError):
 
 class ConflictError(DomainError):
     """Gravação que viola unicidade: ``id`` já gravado, SKU repetido, movimentação já lançada."""
+
+
+class InactiveRecordError(DomainError):
+    """Operação nova sobre cadastro inativo (item, local ou parte)."""
+
+
+class InsufficientStockError(DomainError):
+    """Saída deixaria o saldo negativo e a política proíbe (INV-05)."""

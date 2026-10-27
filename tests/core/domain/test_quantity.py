@@ -291,5 +291,16 @@ def test_sum_beyond_the_limit_is_refused() -> None:
         _ = almost + Quantity(ULP, UN)
 
 
-def test_str_shows_value_and_symbol() -> None:
-    assert str(q("2.5", KG)) == "2.5 kg"
+@pytest.mark.parametrize(
+    ("quantity", "text"),
+    [
+        (q("2.5", KG), "2.5 kg"),
+        (q("2.000000", KG), "2 kg"),
+        (q("100", G), "100 g"),
+        (q("1", KG) - q("3", KG), "-2 kg"),
+        (q("0.000001", KG), "0.000001 kg"),
+        (q("-0", KG), "-0 kg"),
+    ],
+)
+def test_str_shows_value_without_trailing_zeros(quantity: Quantity, text: str) -> None:
+    assert str(quantity) == text
