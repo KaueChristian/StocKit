@@ -9,11 +9,14 @@ Definição de pronto (PROJECT_CONTEXT.md §9.3.6): este comando precisa estar v
 import os
 import subprocess
 import sys
+import sysconfig
 import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = Path(sys.executable).parent  # pasta de executáveis do venv em uso
+# Pasta de executáveis do Python em uso. Num venv é a pasta do próprio python.exe, mas numa
+# instalação comum do Windows (como no CI) fica na subpasta Scripts: por isso o sysconfig.
+SCRIPTS = Path(sysconfig.get_path("scripts"))
 
 
 def module(*args: str) -> list[str]:
@@ -22,7 +25,7 @@ def module(*args: str) -> list[str]:
 
 
 def script(name: str, *args: str) -> list[str]:
-    """Roda um executável instalado no venv (para ferramentas sem ``__main__``)."""
+    """Roda um executável instalado no Python em uso (para ferramentas sem ``__main__``)."""
     return [str(SCRIPTS / name), *args]
 
 
@@ -40,7 +43,11 @@ def run_step(name: str, command: list[str]) -> tuple[bool, float]:
     start = time.perf_counter()
     # UTF-8 forçado: sem isso, acentos saem embaralhados quando a saída é redirecionada no Windows.
     env = os.environ | {"PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
-    result = subprocess.run(command, cwd=ROOT, env=env, check=False)
+    try:
+        result = subprocess.run(command, cwd=ROOT, env=env, check=False)
+    except FileNotFoundError:
+        print(f"ferramenta não encontrada: {command[0]}", flush=True)
+        return False, time.perf_counter() - start
     return result.returncode == 0, time.perf_counter() - start
 
 
