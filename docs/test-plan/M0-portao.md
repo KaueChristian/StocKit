@@ -4,8 +4,14 @@ Plano de teste em `PROJECT_CONTEXT.md` §10 (bloco "Portão M0"). Execuções re
 Casos críticos (★) precisam passar 100% para fechar o milestone.
 
 **Execução 1 — 2026-10-27, commit `3e55ded` (branch `dev`), Windows 11, Python 3.14.3.**
-Resultado: 4 de 6 casos executados, todos passaram. TP-M0-03 ★ e TP-M0-04 pendentes (exigem repositório no
-GitHub). **Portão não fechado.**
+Casos locais: TP-M0-01, TP-M0-02 (parte local), TP-M0-05 e TP-M0-06 — todos passaram.
+
+**Execução 2 — 2026-10-27, GitHub Actions, repositório público
+[KaueChristian/StocKit](https://github.com/KaueChristian/StocKit), commits `cad3790` → `4d6867b` (`dev`).**
+Casos: TP-M0-02 (parte CI), TP-M0-03 e TP-M0-04. O primeiro CI achou o **BUG-01** (check quebrava no Windows fora de
+venv), corrigido em `4d6867b`; depois disso todos passaram.
+
+**Resultado: 6 de 6 casos passaram; casos críticos (★) 100%. Portão aprovado.**
 
 ---
 
@@ -34,7 +40,10 @@ GitHub). **Portão não fechado.**
 - **Resultado obtido:** `lint-imports` saiu com 1 ("core is not allowed to import tkinter"); check saiu com 1;
   commit bloqueado (HEAD não mudou).
 - **Evidência:** [`evidencias/M0/TP-M0-02.log`](evidencias/M0/TP-M0-02.log)
-- **Status:** Passou (parte local). A falha **no GitHub Actions** depende do TP-M0-03.
+- **Status:** Passou (parte local na execução 1; parte CI na execução 2).
+- **Parte CI (execução 2):** PR de teste com o import usado → job `check` falhou no Ubuntu **e** no Windows com
+  `core is not allowed to import tkinter` (run 40554349428). Evidência:
+  [`evidencias/M0/TP-M0-03.md`](evidencias/M0/TP-M0-03.md).
 - **Observações:** na 1ª tentativa o arquivo tinha só `import tkinter` (sem uso). No commit, o gancho
   `ruff check --fix` **apagou** o import não usado antes do import-linter rodar, e o gancho do import-linter apareceu
   como "Passed" — o commit foi barrado pelo ruff, não pela regra de arquitetura. Repetido com o import **usado**
@@ -44,15 +53,33 @@ GitHub). **Portão não fechado.**
 
 ### TP-M0-03 ★ · PR de teste na `dev` → CI executa e reporta
 
-- **Pré-condição:** repositório no GitHub com `main` e `dev` publicadas.
-- **Status:** **Pendente** — não há repositório remoto; push só com pedido explícito do usuário (§0).
+- **Pré-condição:** repositório público no GitHub com `main` e `dev` publicadas (2026-10-27).
+- **Passos:**
+  1. Criar a branch `teste/portao-m0` a partir da `dev` e plantar `core/domain/_portao.py` com `import tkinter` usado
+     (commit pela API do GitHub, como uma edição no site, sem pre-commit no caminho).
+  2. Abrir o PR #1 para a `dev` e ler o resultado do CI.
+  3. Remover o arquivo e ler o CI de novo. Fechar o PR sem merge e apagar a branch.
+- **Resultado esperado:** CI roda no PR, reporta falha com o import proibido e verde sem ele.
+- **Resultado obtido:** o CI rodou em todos os commits e reportou no PR. No primeiro run, o Windows falhou por outro
+  motivo (**BUG-01**, §15): o `tools/check.py` procurava `lint-imports` ao lado do `python.exe`, o que só vale num venv;
+  no runner (Python sem venv) o executável fica em `Scripts\`. Corrigido na `dev` (`4d6867b`, `sysconfig`); depois
+  disso: falha correta com o import nos dois sistemas e **verde nos 3 jobs** sem ele (run 40554576267).
+- **Evidência:** [`evidencias/M0/TP-M0-03.md`](evidencias/M0/TP-M0-03.md)
+- **Status:** Passou (após correção do BUG-01)
+- **Observações:** o bug não aparecia localmente porque o check sempre rodou dentro do `.venv`. O teste de regressão
+  (`tests/tools/test_check.py`) confere que todo executável usado pelo check existe; ele só pega o caso fora de venv
+  quando roda num Python assim, como o do CI.
 
 ### TP-M0-04 · Mermaid dos C4 renderiza no GitHub
 
-- **Pré-condição:** repositório no GitHub.
-- **Status:** **Pendente** — mesmo motivo do TP-M0-03.
-- **Observações:** renderização local já conferida na M0.7 (Mermaid 11.4.1, temas claro e escuro); o GitHub usa a
-  própria versão do Mermaid.
+- **Pré-condição:** repositório público no GitHub.
+- **Passos:** abrir `docs/c4/01-contexto.md` e `docs/c4/02-containers.md` na branch `dev` pelo navegador.
+- **Resultado esperado:** diagramas visíveis.
+- **Resultado obtido:** os dois diagramas renderizam (tema escuro do GitHub), com acentos, cores C4, rótulos das
+  setas e os subgrafos "Desktop (offline)" e "Web"; nenhuma mensagem de erro de renderização na página.
+- **Status:** Passou
+- **Observações:** o GitHub desenha o diagrama aos poucos ao rolar; a parte de baixo aparece vazia por um instante
+  (não é erro). Em tela estreita o nível 2 fica alto (layout vertical, como desenhado na M0.7).
 
 ### TP-M0-05 ★ · `tools/traceability.py` gera a matriz com teste ligado a requisito
 

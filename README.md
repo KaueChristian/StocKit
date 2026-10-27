@@ -1,5 +1,7 @@
 # StocKit
 
+[![CI](https://github.com/KaueChristian/StocKit/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/KaueChristian/StocKit/actions/workflows/ci.yml?query=branch%3Adev)
+
 Gerenciador de estoque **universal**, com o mesmo núcleo em duas plataformas:
 
 - **Desktop:** Tkinter + SQLite, offline, sem servidor.

@@ -11,7 +11,7 @@ no §11. Esta pasta guarda o que não cabe numa linha de tabela:
 
 | Milestone | Plano e execuções | Situação |
 |---|---|---|
-| M0 | [`M0-portao.md`](M0-portao.md) | 4 de 6 casos passaram (2026-10-27); TP-M0-03 e TP-M0-04 pendentes |
+| M0 | [`M0-portao.md`](M0-portao.md) | **Aprovado** (2026-10-27): 6 de 6 casos; BUG-01 achado e corrigido |
 
 ## Template de caso de teste manual
 
@@ -25,6 +25,6 @@ Um arquivo por roteiro: `M<n>-<assunto>.md`.
   1.
 - **Resultado esperado:**
 - **Evidência:** (print/log, caminho em evidencias/)
-- **Status:** Não executado | Passou | Falhou (bug §15: B-xx)
+- **Status:** Não executado | Passou | Falhou (bug §15: BUG-xx)
 - **Observações:**
 ```
