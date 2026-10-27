@@ -17,7 +17,7 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Local** | Lugar onde há saldo; hierárquico (depósito › corredor › prateleira) | `Location` |
 | **Hierarquia de locais** | Conjunto de locais sem ciclo e sem irmãos com o mesmo nome; dá o caminho completo e os descendentes | `LocationTree` |
 | **Parte** | Fornecedor, cliente ou setor; pode ter mais de um papel; o rótulo do papel vem do perfil | `Party`, `PartyRole` |
-| **Lote** | Grupo de unidades de um item com código e validade; base do FEFO | — |
+| **Lote** | Grupo de unidades de um item com código (único no item) e, se o item controla validade, data de validade (vale até o dia, inclusive) | `Lot`, `create_lot` |
 | **Item serializado** | Item controlado por unidade, cada uma com número de série único; unidade base de contagem com fator 1 | `ItemKind.SERIALIZED` |
 | **Movimentação** | Registro imutável de entrada, saída, transferência, ajuste, perda ou devolução; quantidade sempre positiva, o tipo dá a direção | `Movement` |
 | **Tipo de movimentação** | Entrada, saída, transferência (saída/entrada), ajuste (para mais/para menos), perda, devolução de cliente, devolução a fornecedor | `MovementKind` |
@@ -29,7 +29,7 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Política de saldo negativo** | Configuração que proíbe (padrão) ou permite saída acima do saldo; conferida em toda a linha do tempo a partir da movimentação | `NegativeStockPolicy` |
 | **Registro de movimentação** | Serviço único que lança entrada, saída, ajuste, perda e devolução: confere cadastros, converte para a unidade base e aplica a política | `record_movement` |
 | **Data de ocorrência / de registro** | Quando o fato aconteceu / quando foi lançado no sistema; lançamento retroativo tem as duas diferentes | `occurred_at`, `recorded_at` |
-| **FEFO** | *First Expired, First Out*: sai primeiro o lote que vence primeiro | — |
+| **FEFO** | *First Expired, First Out*: sai primeiro o lote que vence primeiro. Saída sem lote informado é repartida entre lotes nessa ordem; lote vencido fica de fora | `fefo_order`, `record_movement` |
 | **Campo personalizado** | Campo extra definido por tipo de item (nome, tipo, obrigatório, validação), guardado em JSON | — |
 | **Perfil** | JSON que pré-configura rótulos, campos e unidades de um tipo de negócio | — |
 | **Contagem / inventário cíclico** | Conferência física: contado × sistema → divergência → movimentos de ajuste | — |

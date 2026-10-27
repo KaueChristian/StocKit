@@ -52,3 +52,25 @@ def first_negative_from(
         if reached_new and running.value < 0:
             return NegativePoint(movement.occurred_at, running)
     return None
+
+
+def available_at(history: Sequence[Movement], at: datetime, unit: UnitOfMeasure) -> Quantity:
+    """Quanto dá para tirar em ``at`` sem deixar nenhum ponto do livro, dali em diante, negativo.
+
+    É o menor saldo entre o saldo em ``at`` e os saldos depois de cada movimentação posterior
+    (nunca menos que zero). Usado pelo FEFO para repartir uma saída entre lotes.
+    """
+    running = Quantity.zero(unit)
+    lowest: Quantity | None = None  # None até chegar em "at"
+    for movement in in_ledger_order(history):
+        if movement.occurred_at > at:
+            if lowest is None:
+                lowest = running  # saldo em "at"
+            running += movement.signed_quantity
+            lowest = running if running < lowest else lowest
+        else:
+            running += movement.signed_quantity
+    if lowest is None:
+        lowest = running
+    zero = Quantity.zero(unit)
+    return lowest if lowest > zero else zero

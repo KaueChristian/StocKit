@@ -13,8 +13,17 @@ from typing import Self, get_protocol_members
 import pytest
 
 from core.domain.catalog import Category, Item
-from core.domain.ids import CategoryId, ItemId, LocationId, MovementId, PartyId, TransferId
+from core.domain.ids import (
+    CategoryId,
+    ItemId,
+    LocationId,
+    LotId,
+    MovementId,
+    PartyId,
+    TransferId,
+)
 from core.domain.location import Location
+from core.domain.lot import Lot
 from core.domain.movement import Movement
 from core.domain.party import Party
 from core.ports.clock import Clock
@@ -22,6 +31,7 @@ from core.ports.repositories import (
     CategoryRepository,
     ItemRepository,
     LocationRepository,
+    LotRepository,
     MovementRepository,
     PartyRepository,
 )
@@ -45,8 +55,9 @@ def test_ledger_only_appends() -> None:
         (CategoryRepository, set()),
         (LocationRepository, set()),
         (PartyRepository, set()),
+        (LotRepository, {"find_by_code", "list_for_item"}),
     ],
-    ids=["item", "categoria", "local", "parte"],
+    ids=["item", "categoria", "local", "parte", "lote"],
 )
 def test_registry_ports_have_crud_without_delete(port: type, extra: set[str]) -> None:
     """Cadastro se inativa, não se apaga: o histórico de movimentações aponta para ele."""
@@ -61,6 +72,7 @@ def test_unit_of_work_exposes_every_repository_and_the_transaction() -> None:
         "categories",
         "locations",
         "parties",
+        "lots",
         "movements",
         "__enter__",
         "__exit__",
@@ -93,6 +105,14 @@ class _Items(_Registry[Item, ItemId]):
         return None
 
 
+class _Lots(_Registry[Lot, LotId]):
+    def find_by_code(self, item_id: ItemId, code: str) -> Lot | None:
+        return None
+
+    def list_for_item(self, item_id: ItemId) -> Sequence[Lot]:
+        return ()
+
+
 class _Movements:
     def append(self, movement: Movement) -> None: ...
 
@@ -118,6 +138,7 @@ class _Uow:
     categories = _Registry[Category, CategoryId]()
     locations = _Registry[Location, LocationId]()
     parties = _Registry[Party, PartyId]()
+    lots = _Lots()
     movements = _Movements()
     committed = False
 

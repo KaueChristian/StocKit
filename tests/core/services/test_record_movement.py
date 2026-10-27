@@ -86,8 +86,9 @@ def world() -> World:
 
 @pytest.mark.req("RF-005")
 def test_receipt_is_recorded_with_both_timestamps(world: World) -> None:
-    movement = world.record(IN, "10", party_id=world.supplier.id, unit_cost=Decimal("0.35"))
-    assert world.state.movements == [movement]
+    recorded = world.record(IN, "10", party_id=world.supplier.id, unit_cost=Decimal("0.35"))
+    assert recorded == tuple(world.state.movements)
+    assert len(world.state.movements) == 1
     stored = world.state.movements[0]
     assert stored.occurred_at == stored.recorded_at == NOW
     assert stored.party_id == world.supplier.id
@@ -279,11 +280,9 @@ def test_lot_rules(world: World) -> None:
         uow.commit()
     with pytest.raises(ValidationError, match="informe o lote"):
         world.record(IN, "1", item_id=lotted.id)
-    lot = LotId(uuid4())
-    world.record(IN, "3", item_id=lotted.id, lot_id=lot)
-    with pytest.raises(InsufficientStockError):
-        world.record(OUT, "1", item_id=lotted.id, lot_id=LotId(uuid4()))
-    world.record(OUT, "3", item_id=lotted.id, lot_id=lot)
+    with pytest.raises(NotFoundError, match="lote"):
+        world.record(IN, "1", item_id=lotted.id, lot_id=LotId(uuid4()))
+    assert world.state.movements == []
 
 
 def test_movement_rules_still_apply(world: World) -> None:

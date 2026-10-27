@@ -18,6 +18,7 @@ from core.ports.repositories import (
     CategoryRepository,
     ItemRepository,
     LocationRepository,
+    LotRepository,
     MovementRepository,
     PartyRepository,
 )
@@ -35,6 +36,9 @@ class UnitOfWork(Protocol):
 
     @property
     def parties(self) -> PartyRepository: ...
+
+    @property
+    def lots(self) -> LotRepository: ...
 
     @property
     def movements(self) -> MovementRepository: ...

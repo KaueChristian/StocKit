@@ -30,6 +30,7 @@ from core.domain.ids import (
     TransferId,
 )
 from core.domain.location import Location
+from core.domain.lot import Lot
 from core.domain.movement import Movement
 from core.domain.party import Party
 
@@ -67,6 +68,18 @@ class LocationRepository(Repository[Location, LocationId], Protocol):
 
 class PartyRepository(Repository[Party, PartyId], Protocol):
     """Partes. ``list`` em ordem de nome, sem diferenciar maiúsculas."""
+
+
+class LotRepository(Repository[Lot, LotId], Protocol):
+    """Lotes. Código único **dentro do item** (``ConflictError``). ``list``: por item, em FEFO."""
+
+    def find_by_code(self, item_id: ItemId, code: str) -> Lot | None:
+        """Busca exata pelo código já normalizado (maiúsculas, sem espaços)."""
+        ...
+
+    def list_for_item(self, item_id: ItemId) -> Sequence[Lot]:
+        """Lotes do item em ordem FEFO (``fefo_order``)."""
+        ...
 
 
 class MovementRepository(Protocol):

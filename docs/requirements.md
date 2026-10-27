@@ -25,7 +25,7 @@ Status: `Planejado` · `Em andamento` · `Atendido` (teste verde ligado) · `Des
 | RF-005 | Registrar entrada, saída, transferência, ajuste e perda | M1/M3/M6 | INV-02, INV-03 | TP-M1-01, TP-M1-02, TP-M3-02 | Em andamento (núcleo pronto: M1.3 movimentação, M1.6 registro, M1.8 transferência; telas M3/M6) |
 | RF-006 | Calcular saldo por item, local e lote, inclusive "em uma data" | M1 | INV-01, INV-08 | TP-M1-01, TP-M1-02, TP-M3-02 | Atendido (M1.7: total, por local com sublocais, por lote e em uma data) |
 | RF-007 | Impedir saldo negativo conforme política configurável | M1 | INV-05 | TP-M1-04, TP-M3-03, TP-M5-04 | Em andamento (M1.6: política aplicada no registro; configuração na M1.12) |
-| RF-008 | Controlar lote e validade com saída FEFO | M1 | INV-06 | TP-M1-05 | Planejado |
+| RF-008 | Controlar lote e validade com saída FEFO | M1 | INV-06 | TP-M1-05 | Atendido (M1.9) |
 | RF-009 | Itens serializados (unidade única, estado) | M1 | INV-07 | TP-M1-06 | Planejado |
 | RF-010 | Conversão entre unidades de medida | M1 | INV-04 | TP-M1-03 | Atendido (M1.1; regras no ADR-006) |
 | RF-011 | Carregar perfis (varejo, cozinha, oficina, TI) | M1/M3 | — | TP-M1-08 | Planejado |

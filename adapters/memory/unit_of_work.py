@@ -12,6 +12,7 @@ from adapters.memory.repositories import (
     MemoryCategoryRepository,
     MemoryItemRepository,
     MemoryLocationRepository,
+    MemoryLotRepository,
     MemoryMovementRepository,
     MemoryPartyRepository,
     MemoryState,
@@ -73,6 +74,10 @@ class MemoryUnitOfWork:
     @property
     def parties(self) -> MemoryPartyRepository:
         return MemoryPartyRepository(self._require_open().parties)
+
+    @property
+    def lots(self) -> MemoryLotRepository:
+        return MemoryLotRepository(self._require_open().lots)
 
     @property
     def movements(self) -> MemoryMovementRepository:

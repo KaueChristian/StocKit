@@ -22,6 +22,7 @@ from core.domain.ids import (
     TransferId,
 )
 from core.domain.location import Location
+from core.domain.lot import Lot, fefo_order
 from core.domain.movement import Movement, MovementKind
 from core.domain.party import Party
 
@@ -35,6 +36,7 @@ class MemoryState:
     categories: dict[CategoryId, Category] = field(default_factory=dict)
     locations: dict[LocationId, Location] = field(default_factory=dict)
     parties: dict[PartyId, Party] = field(default_factory=dict)
+    lots: dict[LotId, Lot] = field(default_factory=dict)
     movements: list[Movement] = field(default_factory=list)
 
     def copy(self) -> MemoryState:
@@ -43,6 +45,7 @@ class MemoryState:
             categories=dict(self.categories),
             locations=dict(self.locations),
             parties=dict(self.parties),
+            lots=dict(self.lots),
             movements=list(self.movements),
         )
 
@@ -115,6 +118,31 @@ class MemoryLocationRepository(_Registry[Location, LocationId]):
 class MemoryPartyRepository(_Registry[Party, PartyId]):
     def __init__(self, data: dict[PartyId, Party]) -> None:
         super().__init__(data, "parte", _by_name)
+
+
+class MemoryLotRepository(_Registry[Lot, LotId]):
+    def __init__(self, data: dict[LotId, Lot]) -> None:
+        super().__init__(data, "lote", lambda lot: lot.code)
+
+    def list(self) -> Sequence[Lot]:
+        by_item: dict[ItemId, list[Lot]] = {}
+        for lot in self._data.values():
+            by_item.setdefault(lot.item_id, []).append(lot)
+        return tuple(lot for item_id in sorted(by_item) for lot in fefo_order(by_item[item_id]))
+
+    def find_by_code(self, item_id: ItemId, code: str) -> Lot | None:
+        return next(
+            (lot for lot in self._data.values() if lot.item_id == item_id and lot.code == code),
+            None,
+        )
+
+    def list_for_item(self, item_id: ItemId) -> Sequence[Lot]:
+        return tuple(fefo_order(lot for lot in self._data.values() if lot.item_id == item_id))
+
+    def _check_unique(self, entity: Lot) -> None:
+        other = self.find_by_code(entity.item_id, entity.code)
+        if other is not None and other.id != entity.id:
+            raise ConflictError(f"o item já tem um lote com o código {entity.code}")
 
 
 class MemoryMovementRepository:
