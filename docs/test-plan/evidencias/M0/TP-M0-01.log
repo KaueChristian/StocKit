@@ -1,0 +1,77 @@
+commit: 3e55ded
+pre-commit installed at .git\hooks\pre-commit
+
+=== ruff (lint) ===
+All checks passed!
+
+=== ruff (formato) ===
+30 files already formatted
+
+=== mypy ===
+Success: no issues found in 12 source files
+
+=== import-linter ===
+
+╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
+╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
+ ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
+ ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
+╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
+╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
+  └──▶║║                    ▲
+      ╚╝────────────────────┘
+
+
+---------
+Contracts
+---------
+
+Analyzed 4 files, 0 dependencies.
+---------------------------------
+
+core é Python puro: não importa adaptadores, apps, frameworks, banco, UI, rede
+nem ferramentas de teste KEPT
+Dentro do core: services usa ports e domain; ports usa domain; domain não
+depende de ninguém KEPT
+
+Contracts: 2 kept, 0 broken.
+
+=== pytest + cobertura ===
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: <tmp>\gate-m0\clone
+configfile: pyproject.toml
+testpaths: tests
+plugins: hypothesis-6.170.12, platformdirs-4.13.6, cov-7.1.0
+collected 128 items
+
+tests\architecture\test_import_contracts.py .......                      [  5%]
+tests\core\test_package.py .....                                         [  9%]
+tests\docs\test_docs_consistency.py .................................... [ 37%]
+..................................................                       [ 76%]
+tests\project\test_dependency_pins.py ..................                 [ 90%]
+tests\tools\test_traceability.py ............                            [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.3-final-0 _______________
+
+Name                        Stmts   Miss Branch BrPart  Cover   Missing
+-----------------------------------------------------------------------
+core\__init__.py                0      0      0      0   100%
+core\domain\__init__.py         0      0      0      0   100%
+core\ports\__init__.py          0      0      0      0   100%
+core\services\__init__.py       0      0      0      0   100%
+-----------------------------------------------------------------------
+TOTAL                           0      0      0      0   100%
+Required test coverage of 90.0% reached. Total coverage: 100.00%
+============================= 128 passed in 2.18s =============================
+
+=== resumo ===
+OK     ruff (lint)               0.8 s
+OK     ruff (formato)            0.2 s
+OK     mypy                      3.6 s
+OK     import-linter             1.0 s
+OK     pytest + cobertura        4.5 s
+total: 10.1 s
+check OK
+exit check: 0; tempo total: 36 s

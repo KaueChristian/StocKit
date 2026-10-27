@@ -7,6 +7,12 @@ no §11. Esta pasta guarda o que não cabe numa linha de tabela:
 - planilhas de cálculo feito à mão usadas como valor esperado (TP-M1-09, TP-M4-01);
 - evidências (prints, logs) de execuções de portão, em `evidencias/<milestone>/`.
 
+## Portões
+
+| Milestone | Plano e execuções | Situação |
+|---|---|---|
+| M0 | [`M0-portao.md`](M0-portao.md) | 4 de 6 casos passaram (2026-10-27); TP-M0-03 e TP-M0-04 pendentes |
+
 ## Template de caso de teste manual
 
 Um arquivo por roteiro: `M<n>-<assunto>.md`.
