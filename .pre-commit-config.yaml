@@ -1,0 +1,43 @@
+# Ganchos rodados a cada commit. Versões iguais às do [dependency-groups] dev do pyproject.toml.
+# Instalar: python -m pre_commit install   ·   Rodar em tudo: python -m pre_commit run --all-files
+default_language_version:
+  python: python3.14
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude: \.(bat|cmd|ps1)$
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.3
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: python
+        additional_dependencies: [mypy==2.4.0, pytest==9.1.1, hypothesis==6.170.12]
+        types_or: [python, toml]
+        pass_filenames: false
+      - id: pytest
+        name: pytest
+        entry: pytest -q -p no:cacheprovider
+        language: python
+        additional_dependencies: [pytest==9.1.1, hypothesis==6.170.12]
+        types_or: [python, toml]
+        pass_filenames: false

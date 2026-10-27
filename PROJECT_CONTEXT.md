@@ -52,8 +52,8 @@
 | Campo | Valor |
 |---|---|
 | Milestone aberto | **M0 — Fundação** |
-| Última etapa concluída | **M0.2** — `pyproject.toml`, `core` instalável em modo editável, venv, versões fixadas (2026-10-27) |
-| Próxima etapa | **M0.3** — ruff, mypy (estrito no `core`), pytest, pytest-cov, hypothesis, pre-commit, `make check` |
+| Última etapa concluída | **M0.3** — ruff, mypy estrito, pytest + cobertura, hypothesis, pre-commit e `tools/check.py` verdes (2026-10-27) |
+| Próxima etapa | **M0.4** — contratos do `import-linter` (e incluí-lo no `tools/check.py` e no pre-commit) |
 | Bloqueios | Nenhum |
 | Último portão aprovado | — |
 | Versão | 0.0.0 (nada publicado) |
@@ -130,7 +130,11 @@ de contabilidade. **Sincronização desktop ↔ web** não está no escopo inici
 | PyInstaller | 6.22.3 | extra `package` | PyPI declara Python 3.14 (fato). Não testado (M3.12) |
 | React / Vite / TypeScript | — | — | Fixar na M6.1 |
 
-- Ferramentas de qualidade (ruff, mypy, pytest...) entram com versão fixa na M0.3.
+- **Ferramentas de qualidade (M0.3)**, no `[dependency-groups] dev` do `pyproject.toml` e repetidas no
+  `.pre-commit-config.yaml`: ruff 0.17.3, mypy 2.4.0, pytest 9.1.1, pytest-cov 7.1.0, coverage 7.17.0,
+  hypothesis 6.170.12, pre-commit 4.7.0; ganchos pre-commit-hooks v6.0.0 e ruff-pre-commit v0.17.3.
+- **Sem GNU make no Windows (fato, 2026-10-27):** o único `make` no PATH é o do Embarcadero RAD Studio, com sintaxe
+  incompatível. Por isso o comando oficial é `python tools/check.py`; o `Makefile` é só atalho para Linux/CI.
 - *Pendente:* dependências **transitivas** ainda não têm lock (ex.: `darkdetect`, `asgiref`). Avaliar lockfile
   (pip-tools/uv) antes de instalar os extras (M3/M5) para cumprir RNF-006 por completo.
 
@@ -317,8 +321,9 @@ M3a/M3b), cada metade com seu portão, e registre em §19.
 3. **Regressão acumulada:** o portão de M*n* inclui os casos críticos de M0..M*n-1* (automatizados: sempre; manuais: os ★).
 4. **Execução registrada** em §11 (data, commit, casos, falhas, decisão go/no-go). Sem registro, o portão não aconteceu.
 5. **Dataset de referência** (M2.7) é a base de todos os números dourados; mudar o gerador exige regenerar e justificar.
-6. **Definição de pronto de uma etapa:** código com teste, requisito referenciado, doc atualizada, `make check` (ruff +
-   mypy + pytest + import-linter) verde, entrada no diário (§14).
+6. **Definição de pronto de uma etapa:** código com teste, requisito referenciado, doc atualizada, `make check` /
+   `python tools/check.py` (ruff + mypy + pytest com cobertura + import-linter a partir da M0.4) verde, entrada no
+   diário (§14).
 
 ---
 
@@ -337,7 +342,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 |---|---|---|---|
 | M0.1 | Criar repositório (pasta definida em D-06), `git init`, branches `main`/`dev`, `.gitignore`, LICENSE (D-05), README mínimo; **mover este arquivo para a raiz** | P | ✅ |
 | M0.2 | `pyproject.toml` com `core` instalável em modo editável; venv; **fixar versões** de Python/Node/Django e registrar em §5.1 | P | ✅ |
-| M0.3 | Ferramentas: ruff, mypy (estrito no `core`), pytest, pytest-cov, hypothesis, pre-commit; alvo único `make check` (ou script equivalente no Windows) | P | ⬜ |
+| M0.3 | Ferramentas: ruff, mypy (estrito no `core`), pytest, pytest-cov, hypothesis, pre-commit; alvo único `make check` (ou script equivalente no Windows) | P | ✅ |
 | M0.4 | Contratos do `import-linter` (`core` não importa adaptadores/apps/frameworks) | P | ⬜ |
 | M0.5 | CI no GitHub Actions: lint, tipos, testes, import-linter em push na `dev` e PRs | P | ⬜ |
 | M0.6 | `docs/`: estrutura, glossário (§20), `requirements.md` (a partir de §8), template de ADR e **ADRs 001–005** (núcleo hexagonal; SQLite no desktop; Django ORM na web; livro de movimentações; campos personalizados em JSON) | M | ⬜ |
@@ -632,8 +637,8 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 |---|---|---|---|---|
 | — | Saldo de item com 100 mil movimentos | — | — | < 100 ms (RNF-002, inicial) |
 | — | Abertura do desktop com dataset demo | — | — | < 3 s (RNF-003, inicial) |
-| — | Cobertura do `core` | — | — | ≥ 90% (RNF-001) |
-| — | Tempo do `make check` | — | — | acompanhar |
+| 2026-10-27 | Cobertura do `core` | 100% (0 instruções; só docstrings) | Commit da M0.3, 5 testes; valor sem significado até a M1 | ≥ 90% (RNF-001) |
+| 2026-10-27 | Tempo do `check` | 8,5 s (mypy 4,1 s com cache frio) | Windows 11, Python 3.14.3, commit da M0.3, 5 testes, primeira execução | acompanhar |
 
 **Ritmo (preencher ao concluir milestones):**
 
@@ -649,6 +654,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M0.3 concluída.** Feito: ferramentas em `[dependency-groups] dev` com versões exatas (verificadas no PyPI); configuração de ruff (inclui `DTZ` para datas sem fuso e `S` de segurança), mypy `strict` (testes/scripts podem ter funções sem anotação), pytest (`--strict-markers`, warnings viram erro, `importlib`), cobertura com ramos e mínimo de 90% no `core`; `tests/conftest.py` com perfis do hypothesis `dev`/`ci`; teste de pacote (`core` e subcamadas importáveis, `py.typed` presente); `tools/check.py` + `Makefile`; `.pre-commit-config.yaml` (higiene, ruff, mypy e pytest) instalado no `.git/hooks`. Resultado: check verde (8,5 s) e `pre-commit run --all-files` verde. **Teste negativo:** um arquivo proposital com import sem uso e função sem tipo fez falhar ruff, mypy e cobertura, com código de saída 1; arquivo removido em seguida. Causa da escolha do script Python: não há GNU make no Windows (o `make` do PATH é do Embarcadero). Lição: a instalação pelo PyPI teve timeouts de leitura com novas tentativas; terminou, mas a rede pode atrasar a configuração em máquina limpa (TP-M0-01). |
 | 2026-10-27 | **M0.2 concluída.** Feito: verificadas no PyPI as versões e o suporte a Python 3.14 de Django, DRF, PyInstaller, CustomTkinter, setuptools e pip; CustomTkinter 6.0.0 testado de verdade num venv descartável (abre janela no 3.14.3). Criados `pyproject.toml` (distribuição `stockit`, `core` sem dependências, extras `desktop`/`web`/`package` com versões exatas), esqueleto `core/{domain,services,ports}` com `py.typed`, `.python-version` (3.14) e `.nvmrc` (24). Venv `.venv` com 3.14.3, `pip install -e .` ok; `import core` de fora do repositório resolve para o código-fonte (editável confirmado). README ganhou o passo a passo de setup. Decisões: D-03 = CustomTkinter (usuário); D-04 = Python 3.14, Node 24 LTS, Django 5.2.18 LTS. Lição: a versão mais nova do Django (6.1.2) não é LTS; o documento pede LTS, por isso 5.2. Pendência registrada em §5.1: lock de dependências transitivas. |
 | 2026-10-27 | **M0.1 concluída.** Feito: `git init` na pasta definida (D-06), `.gitignore` (Python, Node, Django, bancos `.db`/`.sqlite3`, `.env`, caches de ferramentas), `.gitattributes` (LF no repo, CRLF em `.bat`/`.cmd`/`.ps1`), LICENSE MIT, README mínimo, commit inicial na `main` e branch `dev` criada a partir dela (trabalho segue na `dev`). Este arquivo já estava na raiz da pasta; atualizado o nome para **StocKit**. Resultado: ok, nada publicado (sem remoto, sem push). Decisões: D-01 = StocKit (escolha do usuário); D-05 = MIT (usuário sem preferência → recomendação do documento); D-06 = pasta atual. Lição: o titular do copyright na LICENSE usa o usuário GitHub `KaueChristian` (§2) — *hipótese* de que é o nome desejado; ajustar se não for. |
 | 2026-10-27 | **Planejamento inicial.** Revisado o portfólio (`kauechristian.github.io`): a seção de projetos só renderiza placeholders de template e **não há repositório do Inventory Manager**; confirmado pelo usuário que o projeto começa do zero. Pesquisadas referências no GitHub (§21). Decisões tomadas: universal (sem nicho), duas plataformas com núcleo compartilhado, sem servidor dedicado, desktop primeiro. Este arquivo criado com o roadmap M0–M7 e portões de integridade. Nenhum código escrito. |
@@ -735,6 +741,10 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | **Django 5.2 LTS** em vez do 6.1 | O documento pede LTS; 5.2 tem suporte até 2028 e já cobre o Python 3.14 |
 | 2026-10-27 | **Node 24 LTS** para o frontend | Já instalado; linha LTS |
 | 2026-10-27 | Um único `pyproject.toml` (distribuição `stockit`) com extras por plataforma | O `core` fica sem dependências; cada app instala só o extra dele |
+| 2026-10-27 | Comando de qualidade = `python tools/check.py`; `make check` só chama o script | Funciona igual no Windows (sem GNU make) e no CI |
+| 2026-10-27 | Ferramentas de dev em `[dependency-groups]` (PEP 735), não em extras | Não fazem parte do pacote publicado; `pip install --group dev` (pip ≥ 25.1) |
+| 2026-10-27 | Cobertura mínima de 90% já ativa desde a M0 | Mais simples ligar agora do que lembrar de ligar na M1 (RNF-001) |
+| 2026-10-27 | pre-commit roda mypy e pytest em ambientes isolados do próprio pre-commit | Funciona sem venv ativo; o `core` não tem dependências, então o ambiente isolado basta. Custo: versões repetidas em dois arquivos |
 
 **Índice de ADRs** (`docs/adr/`, preencher na M0.6): ADR-001 núcleo hexagonal · ADR-002 SQLite no desktop · ADR-003 Django ORM na web · ADR-004 livro de movimentações · ADR-005 campos personalizados em JSON.
 

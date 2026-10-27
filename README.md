@@ -22,11 +22,21 @@ Requisitos: **Python 3.14** e **Git**. (Node 24 LTS só será necessário a part
 ```powershell
 py -3.14 -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip==26.2.2
-.venv\Scripts\python -m pip install -e .
-.venv\Scripts\python -c "import core; print(core.__file__)"
+.venv\Scripts\python -m pip install -e . --group dev
+.venv\Scripts\python -m pre_commit install
+.venv\Scripts\python tools\check.py
 ```
 
 O pacote `core` fica instalado em modo editável: alterações no código valem sem reinstalar.
+
+### Verificação (`check`)
+
+`python tools/check.py` é o comando único de qualidade (no Linux/CI, `make check` chama o mesmo script). Ele roda:
+ruff (lint e formato), mypy (estrito), pytest com cobertura do `core` (mínimo 90%). Uma etapa só está pronta com o
+check verde. O pre-commit roda ruff, mypy e pytest a cada commit.
+
+Os testes com hypothesis usam o perfil `dev` (rápido) por padrão; `HYPOTHESIS_PROFILE=ci` deixa a execução
+determinística e com mais exemplos.
 Extras com versões fixas, instalados quando o milestone pedir: `.[desktop]` (CustomTkinter), `.[web]` (Django LTS + DRF)
 e `.[package]` (PyInstaller).
 

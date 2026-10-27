@@ -21,8 +21,81 @@ desktop = ["customtkinter==6.0.0"]                              # M3
 web = ["Django==5.2.18", "djangorestframework==3.18.3"]         # M5 (Django 5.2 = LTS)
 package = ["pyinstaller==6.22.3"]                               # M3.12
 
+# Ferramentas de desenvolvimento (M0.3). Instalar com: python -m pip install --group dev
+# Ao mudar uma versão aqui, mudar também em .pre-commit-config.yaml (mesmas versões).
+[dependency-groups]
+dev = [
+    "ruff==0.17.3",
+    "mypy==2.4.0",
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
+    "coverage==7.17.0",
+    "hypothesis==6.170.12",
+    "pre-commit==4.7.0",
+]
+
 [tool.setuptools.packages.find]
 include = ["core*"]
 
 [tool.setuptools.package-data]
 core = ["py.typed"]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = [".", "tests", "tools"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes
+    "I",       # isort
+    "B",       # bugbear
+    "UP",      # pyupgrade
+    "SIM",     # simplify
+    "C4",      # comprehensions
+    "N",       # nomes (pep8-naming)
+    "PT",      # estilo pytest
+    "RUF",     # regras do ruff
+    "DTZ",     # datetime sem fuso proibido (princípio 5: tudo em UTC)
+    "S",       # segurança (bandit)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]  # assert é o idioma do pytest
+"tools/**" = ["S603"]  # subprocess com argumentos fixos, sem shell
+
+# ---------------------------------------------------------------- mypy
+# Estrito em tudo; testes e scripts podem ter funções sem anotação.
+[tool.mypy]
+python_version = "3.14"
+files = ["core", "tests", "tools"]
+strict = true
+explicit_package_bases = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*", "tools.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["--import-mode=importlib", "-ra", "--strict-markers", "--strict-config"]
+xfail_strict = true
+filterwarnings = ["error"]
+
+# ---------------------------------------------------------------- coverage
+[tool.coverage.run]
+source = ["core"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90  # RNF-001
+show_missing = true
+skip_covered = false
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "\\.\\.\\."]
