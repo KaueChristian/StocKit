@@ -53,6 +53,6 @@ repos:
         name: pytest
         entry: pytest -q -p no:cacheprovider
         language: python
-        additional_dependencies: [pytest==9.1.1, hypothesis==6.170.12]
+        additional_dependencies: [pytest==9.1.1, hypothesis==6.170.12, import-linter==2.15]
         types_or: [python, toml, markdown]  # markdown: tests/docs confere a coerência da documentação
         pass_filenames: false

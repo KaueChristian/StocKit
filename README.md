@@ -47,6 +47,10 @@ Os contratos ficam no `pyproject.toml`, seção `[tool.importlinter]`:
 
 Imports dinâmicos (`importlib.import_module("tkinter")`) **não** são detectados; a revisão de código cobre esse caso.
 
+O teste sentinela [`tests/architecture/test_import_contracts.py`](tests/architecture/test_import_contracts.py) prova que
+os contratos funcionam: copia o `core` para uma pasta temporária, planta imports proibidos e confirma que cada um quebra
+o contrato certo. Se alguém enfraquecer um contrato no `pyproject.toml`, esse teste falha.
+
 ### Rastreabilidade (requisito ↔ teste)
 
 Todo teste que comprova um requisito de [`docs/requirements.md`](docs/requirements.md) leva o marcador `req`:
