@@ -9,7 +9,9 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 |---|---|---|
 | **Item** | Qualquer coisa controlada em estoque (produto, insumo, ativo, peça) | `Item` |
 | **SKU** | Código único que identifica um item | `sku` |
-| **Unidade de medida** | Símbolo e grandeza de uma quantidade, com conversões (caixa → 12 un; L → mL) | — |
+| **Unidade de medida** | Símbolo, nome, grandeza e fator para a unidade base da grandeza (kg = 1; g = 0,001; caixa com 12 = 12 un) | `UnitOfMeasure` |
+| **Grandeza** | Tipo de medida: contagem, massa, volume ou comprimento; só se converte dentro da mesma | `Dimension` |
+| **Quantidade** | Valor `Decimal` (até 6 casas, até 12 dígitos inteiros) numa unidade; conversão arredonda uma vez, half-even (ADR-006) | `Quantity` |
 | **Local** | Lugar onde há saldo; hierárquico (depósito › corredor › prateleira) | — |
 | **Parte** | Fornecedor, cliente ou setor; o papel é configurável | — |
 | **Lote** | Grupo de unidades de um item com código e validade; base do FEFO | — |
@@ -32,6 +34,7 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Giro** | Quantas vezes o estoque se renova num período | — |
 | **Cobertura** | Dias que o estoque atual dura no ritmo de consumo | — |
 | **Ruptura** | Falta do item quando há demanda | — |
+| **Erro de domínio** | Regra de negócio violada, com mensagem legível em PT-BR; base de todos os erros do núcleo | `DomainError` |
 
 ## Arquitetura
 

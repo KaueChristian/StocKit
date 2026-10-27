@@ -52,13 +52,13 @@
 
 | Campo | Valor |
 |---|---|
-| Milestone aberto | **M1 — Núcleo de domínio** (nenhuma etapa iniciada) |
-| Última etapa concluída | **M0 fechado** — portão aprovado, `main` = `dev` e tag `v0.0.1` (2026-10-27) |
-| Próxima etapa | **M1.1** — value objects `Quantity` e `UnidadeDeMedida`, com conversões (INV-04) |
+| Milestone aberto | **M1 — Núcleo de domínio** (1 de 14 etapas) |
+| Última etapa concluída | **M1.1** — `Quantity`, `UnitOfMeasure` e `Dimension` com conversão exata e um único arredondamento (ADR-006); RF-010 atendido (2026-10-27) |
+| Próxima etapa | **M1.2** — entidades `Item`, `Categoria`, `Local` (hierarquia) e `Parte`, com validações |
 | Bloqueios | Nenhum |
 | Último portão aprovado | **M0** — 2026-10-27, 6 de 6 casos, BUG-01 achado e corrigido (§11) |
 | Versão | **0.0.1** — tag `v0.0.1` na `main` ([KaueChristian/StocKit](https://github.com/KaueChristian/StocKit)) |
-| Bugs abertos | 0 (BUG-01 corrigido) |
+| Bugs abertos | 0 (BUG-01 e BUG-02 corrigidos) |
 
 ---
 
@@ -248,7 +248,8 @@ dirige a interface real com `event_generate`/`invoke`.
 - INV-01 Saldo de (item, local, lote) = soma assinada das movimentações; nunca armazenado como verdade.
 - INV-02 Movimentação nunca é alterada ou apagada (trigger no SQLite, ausência de update/delete no repositório).
 - INV-03 Transferência é um par atômico (saída + entrada) e conserva a quantidade total.
-- INV-04 Conversão de unidade ida e volta preserva o valor (com `Decimal` e arredondamento definido).
+- INV-04 Conversão de unidade ida e volta preserva o valor (com `Decimal` e arredondamento definido: 6 casas,
+  half-even, um único arredondamento; erro máximo ½·10⁻⁶·(1 + f_B/f_A), zero para unidade divisível — ADR-006).
 - INV-05 Saldo negativo só ocorre se a política do sistema permitir (padrão: proibido).
 - INV-06 Saída de item com lote segue FEFO quando o lote não é informado.
 - INV-07 Item serializado nunca tem saldo fracionário nem número de série repetido.
@@ -351,7 +352,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | ID | Etapa | Tam. | Status |
 |---|---|---|---|
-| M1.1 | Value objects: `Quantity` (`Decimal` + unidade), `UnidadeDeMedida` e conversões (INV-04) | M | ⬜ |
+| M1.1 | Value objects: `Quantity` (`Decimal` + unidade), `UnidadeDeMedida` e conversões (INV-04) | M | ✅ (no código: `UnitOfMeasure`, ver §19) |
 | M1.2 | Entidades `Item`, `Categoria`, `Local` (hierarquia), `Parte` com validações | M | ⬜ |
 | M1.3 | `Movimentacao` imutável e tipos (entrada, saída, transferência, ajuste, perda, devolução) | M | ⬜ |
 | M1.4 | Portas: repositórios, `UnitOfWork`, `Clock` (`Protocol`) | P | ⬜ |
@@ -638,6 +639,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M1.1 concluída.** Feito: `core/domain/quantity.py` com `Dimension` (contagem, massa, volume, comprimento), `UnitOfMeasure` (símbolo, nome, grandeza, fator para a base) e `Quantity` (`Decimal` até 6 casas e 12 dígitos inteiros; conversão `to()`; soma, subtração, negação e comparação só na mesma unidade); catálogo `STANDARD_UNITS` (un, dz, kg, g, mg, L, mL, m, cm, mm); `core/domain/errors.py` com `DomainError` e três erros específicos. 54 testes novos ligados ao RF-010, com propriedades do hypothesis para a INV-04 (limite de ida e volta, ida e volta exata para unidade divisível, arredondamento único) — verdes nos perfis `dev` e `ci`; cobertura do `core` 100%. **Prova de que os testes pegam erro:** trocar half-even por "meio para cima" derrubou o teste do caso do meio; arredondar para 5 casas derrubou 6 testes. Decisões: ADR-006 (escala e arredondamento) e nomes em inglês (§19). **Achado ao gerar a matriz:** BUG-02 (redirecionar a matriz para arquivo quebrava no Windows), corrigido em commit próprio. Lição: o caso do meio exato precisa de teste de exemplo; propriedades com limite de erro não distinguem half-even de half-up. |
 | 2026-10-27 | **M0 fechado — `v0.0.1`.** A pedido do usuário: versão do `pyproject.toml` 0.0.0 → 0.0.1, `main` avançada até a `dev` por fast-forward (sem commit de merge; histórico igual nas duas) e tag anotada `v0.0.1` publicada. CI verde na `dev` antes de mover a `main`. Milestone aberto passa a ser o M1. Lição: nenhuma nova. |
 | 2026-10-27 | **Portão M0 aprovado (execução 2, GitHub).** Repositório criado **público** em `KaueChristian/StocKit` a pedido do usuário; `main` e `dev` publicadas. **Achado:** o 1º CI da `dev` falhou só no Windows — `tools/check.py` quebrou com `FileNotFoundError` ao chamar `lint-imports`. **Causa (fato, pelo log e pelo código):** o script procurava executáveis ao lado do `python.exe`, o que só vale num venv; no runner, que usa o Python sem venv, eles ficam em `Scripts\`. Localmente nunca apareceu porque o check sempre rodou no `.venv`. **Correção** (`4d6867b`, BUG-01): caminho via `sysconfig.get_path("scripts")`; ferramenta ausente vira "FALHA" no resumo em vez de traceback; 2 testes novos. CI da `dev` verde nos dois sistemas. **TP-M0-02 (CI):** PR #1 com `import tkinter` usado → `check` falhou no Ubuntu e no Windows pelo contrato `core-puro`. **TP-M0-03:** sem o import, 3 jobs verdes; PR fechado sem merge e branch apagada. Os commits da branch de teste foram feitos pela API do GitHub, para o import chegar ao CI sem pular ganchos locais. **TP-M0-04:** os dois C4 renderizam no GitHub. Resultado: **6 de 6, go.** Lições: (1) o CI em outro SO e sem venv achou um defeito que nenhum teste local podia achar — vale para o empacotamento (M3); (2) IDs de bug passam a usar `BUG-xx`, porque `B-xx` já é do backlog (§12). Pendente: tag `v0.0.1` e merge na `main`, só com pedido do usuário. |
 | 2026-10-27 | **Portão M0 — execução parcial (local).** Sobre o commit `3e55ded`: **TP-M0-01** ★ passou (clone limpo seguindo só o README, check verde em 36 s); **TP-M0-02** ★ passou na parte local (`lint-imports` e `tools/check.py` saíram com 1, commit bloqueado); **TP-M0-05** ★ passou (matriz com RNF-006 ligada a 18 testes verdes); **TP-M0-06** passou (estrutura automática + revisão das afirmações dos ADRs contra o repositório; revisão feita pelo autor). **Achado no TP-M0-02:** com `import tkinter` sem uso, o gancho `ruff check --fix` apagou o import antes do import-linter rodar, e o gancho do import-linter apareceu "Passed" (commit barrado pelo ruff). Causa comprovada pelo log ("1 fixed") e pelo arquivo vazio depois do commit; rodando o gancho isolado, ele acusa a violação. Repetido com import usado: gancho do import-linter falhou como esperado. **Não é bug** — lição: casos de violação usam import usado. TP-M0-03 ★ e TP-M0-04 **pendentes** (GitHub). Evidências em `docs/test-plan/evidencias/M0/`; registro no §11. Corrigida também a linha "Bloqueios" do painel (§1), que tinha uma célula sobrando por uma edição incompleta na M0.10 (o teste de coerência não confere o formato das tabelas). |
@@ -741,6 +743,10 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Cobertura mínima de 90% já ativa desde a M0 | Mais simples ligar agora do que lembrar de ligar na M1 (RNF-001) |
 | 2026-10-27 | Repositório **público** em `github.com/KaueChristian/StocKit` (conta `KaueChristian`, a mesma do LICENSE); commits publicados com o e-mail do autor como estão | Pedido do usuário: projeto de desenvolvimento/portfólio, sem nada sensível. Antes do push: busca por segredos em todo o histórico (nenhum) |
 | 2026-10-27 | PR de teste de portão: commits de violação feitos pela API do GitHub; PR fechado sem merge | Simula uma edição feita no site (sem pre-commit), que é o caso que o CI precisa barrar; não exige pular ganchos locais |
+| 2026-10-27 | Nomes de código em **inglês** no domínio (`UnitOfMeasure`, `Dimension`, `Quantity`), mesmo onde o roadmap escreveu em PT-BR (`UnidadeDeMedida`); o glossário liga termo ↔ código | Regra do §2 (identificadores em inglês, interface em PT-BR); o roadmap usa nomes de trabalho |
+| 2026-10-27 | Quantidades: 6 casas, 12 dígitos inteiros, conversão exata com um arredondamento half-even; operações só na mesma unidade (**ADR-006**) | Define o "arredondamento definido" da INV-04 e garante o mesmo resultado nas duas plataformas (RNF-004) |
+| 2026-10-27 | Embalagem (caixa com 12) é uma unidade de **contagem** comum, sem conversão por item | Mais simples; caixas de tamanhos diferentes viram unidades diferentes. *Hipótese* de que basta — reavaliar na M1.2 (`Item`) e na M1.12 (perfis) |
+| 2026-10-27 | Base de erros de domínio (`DomainError` e três subclasses) criada já na M1.1 | A conversão precisa recusar valores; a M1.13 completa a hierarquia em vez de começar do zero |
 | 2026-10-27 | Ao fechar milestone, a `main` recebe a `dev` por **fast-forward**, e a tag é **anotada** e fica na `main` | A `main` só recebe trabalho já aprovado no portão, então não há divergência a mesclar; a tag anotada guarda data e autor do fechamento |
 | 2026-10-27 | IDs de bug no §15 usam `BUG-xx` | `B-xx` já identifica o backlog (§12) |
 | 2026-10-27 | M0.10: **testes reais da RNF-006** no lugar do "teste dummy" ligado a um RF; TP-M0-05 passa a ser verificado com RNF-006 | Um dummy marcado com um RF faria a matriz mostrar o requisito como coberto sem nada verificado; os testes da RNF-006 ainda fecham o risco de versões divergentes entre pyproject, pre-commit e CI |
@@ -762,11 +768,12 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | `core` também proíbe rede, subprocessos e bibliotecas de teste | Regra "nada de I/O" do §0; `os`/`pathlib` ficaram liberados por enquanto (reavaliar na M1.12, loader de perfis) |
 | 2026-10-27 | pre-commit roda mypy e pytest em ambientes isolados do próprio pre-commit | Funciona sem venv ativo; o `core` não tem dependências, então o ambiente isolado basta. Custo: versões repetidas em dois arquivos |
 
-**Índice de ADRs** ([`docs/adr/`](docs/adr/README.md), criados na M0.6, todos *Aceito*):
+**Índice de ADRs** ([`docs/adr/`](docs/adr/README.md), 001–005 criados na M0.6, todos *Aceito*):
 [ADR-001](docs/adr/001-nucleo-hexagonal.md) núcleo hexagonal · [ADR-002](docs/adr/002-sqlite-no-desktop.md) SQLite no
 desktop · [ADR-003](docs/adr/003-django-orm-na-web.md) Django ORM na web ·
 [ADR-004](docs/adr/004-livro-de-movimentacoes.md) livro de movimentações ·
-[ADR-005](docs/adr/005-campos-personalizados-em-json.md) campos personalizados em JSON.
+[ADR-005](docs/adr/005-campos-personalizados-em-json.md) campos personalizados em JSON ·
+[ADR-006](docs/adr/006-quantidades-com-escala-fixa.md) escala e arredondamento das quantidades (M1.1).
 
 ---
 

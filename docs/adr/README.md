@@ -10,3 +10,4 @@ Para criar um novo, copie o [template](template.md). Decisões menores ficam só
 | [ADR-003](003-django-orm-na-web.md) | Web persiste pelo Django ORM, como adaptador das mesmas portas | Aceito |
 | [ADR-004](004-livro-de-movimentacoes.md) | Estoque como livro de movimentações imutáveis; saldo sempre derivado | Aceito |
 | [ADR-005](005-campos-personalizados-em-json.md) | Campos personalizados guardados em JSON e validados por definição | Aceito |
+| [ADR-006](006-quantidades-com-escala-fixa.md) | Quantidades com escala fixa de 6 casas e conversão com um único arredondamento half-even | Aceito |
