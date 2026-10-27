@@ -32,3 +32,11 @@ class ValidationError(DomainError):
 
 class HierarchyError(DomainError):
     """Hierarquia de locais inconsistente: ciclo, pai inexistente ou nome repetido entre irmãos."""
+
+
+class NotFoundError(DomainError):
+    """Registro pedido não existe (``get`` ou ``update`` de algo que não foi gravado)."""
+
+
+class ConflictError(DomainError):
+    """Gravação que viola unicidade: ``id`` já gravado, SKU repetido, movimentação já lançada."""
