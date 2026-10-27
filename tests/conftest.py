@@ -7,7 +7,10 @@ Perfis do hypothesis (escolhidos pela variável de ambiente HYPOTHESIS_PROFILE):
 
 import os
 
+import pytest
 from hypothesis import HealthCheck, settings
+
+from tools.traceability import has_req_marker, load_requirements, marker_problems, req_ids
 
 settings.register_profile("dev", max_examples=50)
 settings.register_profile(
@@ -18,3 +21,11 @@ settings.register_profile(
     suppress_health_check=[HealthCheck.too_slow],
 )
 settings.load_profile(os.environ.get("HYPOTHESIS_PROFILE", "dev"))
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Todo ``@pytest.mark.req`` precisa citar requisitos que existem em docs/requirements.md."""
+    links = {item.nodeid: req_ids(item) for item in items if has_req_marker(item)}
+    problems = marker_problems(links, set(load_requirements()))
+    if problems:
+        raise pytest.UsageError("marker req inválido:\n  " + "\n  ".join(problems))

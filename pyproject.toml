@@ -63,6 +63,9 @@ select = [
     "S",       # segurança (bandit)
 ]
 
+# "×" é usado de propósito em textos ("requisito × teste"); não é um "x" disfarçado.
+allowed-confusables = ["×"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]  # assert é o idioma do pytest
 "tools/**" = ["S603"]  # subprocess com argumentos fixos, sem shell
@@ -88,6 +91,9 @@ testpaths = ["tests"]
 pythonpath = ["."]
 addopts = ["--import-mode=importlib", "-ra", "--strict-markers", "--strict-config"]
 xfail_strict = true
+markers = [
+    "req(*ids): liga o teste a requisitos de docs/requirements.md (ex.: \"RF-005\"); ver tools/traceability.py",
+]
 filterwarnings = ["error"]
 
 # ---------------------------------------------------------------- import-linter (M0.4)

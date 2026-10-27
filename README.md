@@ -47,6 +47,25 @@ Os contratos ficam no `pyproject.toml`, seção `[tool.importlinter]`:
 
 Imports dinâmicos (`importlib.import_module("tkinter")`) **não** são detectados; a revisão de código cobre esse caso.
 
+### Rastreabilidade (requisito ↔ teste)
+
+Todo teste que comprova um requisito de [`docs/requirements.md`](docs/requirements.md) leva o marcador `req`:
+
+```python
+@pytest.mark.req("RF-007")
+def test_saida_acima_do_saldo_e_recusada(): ...
+```
+
+Um ID que não existe faz o pytest parar já na coleta. Para gerar a matriz requisito × teste × resultado:
+
+```powershell
+.venv\Scripts\python tools\traceability.py                  # Markdown no terminal
+.venv\Scripts\python tools\traceability.py --output m.md    # em arquivo
+.venv\Scripts\python tools\traceability.py --json           # para outras ferramentas
+```
+
+O script roda a suíte inteira e sai com código 1 se algum teste ligado a requisito falhar.
+
 ### Integração contínua
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em push e PR nas branches `dev` e `main`:
