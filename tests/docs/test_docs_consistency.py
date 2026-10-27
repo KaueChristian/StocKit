@@ -14,6 +14,7 @@ CONTEXT = ROOT / "PROJECT_CONTEXT.md"
 DOCS = ROOT / "docs"
 REQUIREMENTS = DOCS / "requirements.md"
 ADR_DIR = DOCS / "adr"
+C4_DIR = DOCS / "c4"
 
 REQ_ID = re.compile(r"\b(?:RF|RNF)-\d{3}\b")
 GATE_ID = re.compile(r"\bTP-M\d+-\d{2}\b")
@@ -150,3 +151,24 @@ def test_cited_adrs_exist(source: Path) -> None:
     defined = {f"ADR-{p.name[:3]}" for p in adr_files()}
     cited = set(ADR_ID.findall(read(source)))
     assert cited <= defined, f"ADRs citados que não existem: {sorted(cited - defined)}"
+
+
+def c4_files() -> list[Path]:
+    return sorted(C4_DIR.glob("[0-9][0-9]-*.md"))
+
+
+def test_c4_has_levels_1_and_2() -> None:
+    assert [p.name[:2] for p in c4_files()] == ["01", "02"]
+
+
+@pytest.mark.parametrize("diagram", c4_files(), ids=lambda p: p.name)
+def test_c4_level_has_one_flowchart(diagram: Path) -> None:
+    blocks = re.findall(r"```mermaid\n(.*?)```", read(diagram), flags=re.DOTALL)
+    assert len(blocks) == 1, "cada nível do C4 tem exatamente um bloco mermaid"
+    assert blocks[0].startswith("flowchart "), "notação adotada: flowchart (docs/c4/README.md)"
+
+
+def test_c4_index_links_every_level() -> None:
+    index = read(C4_DIR / "README.md")
+    linked = set(re.findall(r"\]\((\d{2}-[^)]+\.md)\)", index))
+    assert linked == {p.name for p in c4_files()}

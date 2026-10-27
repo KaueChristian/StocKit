@@ -53,9 +53,9 @@
 | Campo | Valor |
 |---|---|
 | Milestone aberto | **M0 — Fundação** |
-| Última etapa concluída | **M0.6** — `docs/` (requisitos, glossário, planos de teste), template de ADR e ADRs 001–005, teste de coerência da documentação (2026-10-27) |
-| Próxima etapa | **M0.7** — diagramas C4 níveis 1–2 em Mermaid (`docs/c4/`) |
-| Bloqueios | Nenhum para a M0.7. **Portão M0** (TP-M0-03, TP-M0-04) exige repositório remoto no GitHub e push — só com pedido explícito do usuário (§0) |
+| Última etapa concluída | **M0.7** — diagramas C4 nível 1 (contexto) e 2 (containers) em Mermaid, renderizados e conferidos localmente (2026-10-27) |
+| Próxima etapa | **M0.8** — template de PR (checklist do §9.3.6), templates de issue, `CONTRIBUTING.md` |
+| Bloqueios | Nenhum para a M0.8. **Portão M0** (TP-M0-03, TP-M0-04) exige repositório remoto no GitHub e push — só com pedido explícito do usuário (§0) |
 | Último portão aprovado | — |
 | Versão | 0.0.0 (nada publicado) |
 | Bugs abertos | 0 |
@@ -180,6 +180,8 @@ de contabilidade. **Sincronização desktop ↔ web** não está no escopo inici
 ## 6. Arquitetura
 
 ### 6.1 Visão (hexagonal: um núcleo, duas interfaces)
+
+Diagramas: [C4 nível 1 — contexto](docs/c4/01-contexto.md) · [C4 nível 2 — containers](docs/c4/02-containers.md).
 
 ```
 StocKit/
@@ -323,7 +325,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | M0.4 | Contratos do `import-linter` (`core` não importa adaptadores/apps/frameworks) | P | ✅ |
 | M0.5 | CI no GitHub Actions: lint, tipos, testes, import-linter em push na `dev` e PRs | P | ✅ (validado localmente; 1ª execução real no GitHub pendente → TP-M0-03) |
 | M0.6 | `docs/`: estrutura, glossário (§20), `requirements.md` (a partir de §8), template de ADR e **ADRs 001–005** (núcleo hexagonal; SQLite no desktop; Django ORM na web; livro de movimentações; campos personalizados em JSON) | M | ✅ |
-| M0.7 | Diagramas C4 níveis 1–2 em Mermaid (`docs/c4/`) | P | ⬜ |
+| M0.7 | Diagramas C4 níveis 1–2 em Mermaid (`docs/c4/`) | P | ✅ (renderização no GitHub pendente → TP-M0-04) |
 | M0.8 | Template de PR (checklist de §9.3.6), templates de issue, `CONTRIBUTING.md` curto | P | ⬜ |
 | M0.9 | Marker `req` no pytest + script `tools/traceability.py` que gera a matriz requisito × teste × status | M | ⬜ |
 | M0.10 | Teste "sentinela" do import-linter (prova que um import proibido quebra o CI) e teste dummy anotado com `req` | P | ⬜ |
@@ -632,6 +634,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M0.7 concluída.** Feito: `docs/c4/README.md` (índice e notação), `01-contexto.md` (3 pessoas, StocKit, leitor de código de barras, planilhas/CSV, impressora/PDF) e `02-containers.md` (app desktop, arquivo `.db`, núcleo como biblioteca, SPA, API, banco da web), cada um com tabela de elementos, requisitos ligados e o que fica fora de propósito (sem sincronização, P-05). **Verificação:** página temporária com Mermaid 11.4.1 servida por `http.server` local e aberta no navegador do app; os 2 diagramas renderizaram sem erro nos temas claro e escuro, com o número esperado de nós e ligações. **O que falhou e foi corrigido:** (1) títulos longos dos grupos ("Web: local ou demo em plano gratuito") saíam cortados → encurtados; (2) o núcleo ficava no canto inferior direito com ligações longas cruzando o desenho → testadas 4 variações (ordem de declaração, layout horizontal, ligação invisível); escolhida a ligação invisível `db_desktop ~~~ core ~~~ db_web`, que centraliza o núcleo sem mudar o significado. O layout horizontal ficou largo e ilegível. Abrir `file://` direto no navegador do app só mostra snapshot estático (sem scripts) — por isso o servidor local. Teste de coerência ganhou checagens do C4 (73 casos). **Não verificado:** renderização no próprio GitHub (TP-M0-04), que usa sua própria versão do Mermaid. |
 | 2026-10-27 | **M0.6 concluída.** Feito: `docs/README.md` (índice), `docs/requirements.md` (34 requisitos do antigo §8, com invariantes, casos de portão e status), `docs/glossary.md` (antigo §20 ampliado com termos de domínio, arquitetura e processo), `docs/test-plan/README.md` (template de caso manual), `docs/adr/template.md`, índice e **ADRs 001–005** (todos *Aceito*; ADR-002 registra a escolha do usuário em D-02). §8 e §20 deste arquivo viraram ponteiros. Novo `tests/docs/test_docs_consistency.py` (57 casos): todo RF/RNF, TP, INV e ADR citado existe; IDs de requisito únicos; requisitos sem caso de portão estão em "Lacunas"; ADRs seguem o template e estão no índice. **Testes negativos:** RF, TP, INV e ADR inexistentes e um ADR sem seção obrigatória — os 5 foram pegos; arquivos restaurados. Dois falsos alarmes do próprio teste corrigidos antes (o `★` dos casos críticos e a tabela de lacunas contada como duplicata). **Achado:** RF-002, RF-003, RF-016 e RF-019 **não têm caso de portão**; listados em "Lacunas conhecidas" com sugestão de caso — precisam entrar nos planos de M1, M3 e M4 antes desses portões. pre-commit agora roda o pytest também quando um `.md` muda. |
 | 2026-10-27 | **M0.5 concluída (sem remoto, por pedido do usuário).** Feito: `.github/workflows/ci.yml` com job `check` em matriz Ubuntu + Windows (instala do zero e roda `tools/check.py`, hypothesis no perfil `ci`) e job `higiene` (pre-commit sem os ganchos que o check já cobre). Gatilhos: push e PR em `dev`/`main` e disparo manual. Segurança: `permissions: contents: read`, `persist-credentials: false`, actions fixadas por hash, cancelamento de execuções antigas da mesma branch. Shell `bash` também no Windows (o `pwsh` padrão não para no primeiro erro). Novo gancho `check-github-workflows` (schema oficial). **Verificação:** schema ok; workflow com erro proposital (`stepz`) rejeitado; **simulação dos passos do CI num clone limpo** (venv, instalação, check, higiene) verde em 43 s. **Não verificado (fato):** execução no GitHub — sem repositório remoto; fica para TP-M0-03 no portão. Hipótese não testada: `default_language_version: python3.14` do pre-commit acha o `python3.14` no runner Ubuntu (o setup-python costuma criar esse executável). |
 | 2026-10-27 | **M0.4 concluída.** Feito: import-linter 2.15 no grupo `dev`, no `tools/check.py` (via executável do venv, pois o pacote não roda com `python -m`) e no pre-commit. Contratos: `core-puro` (forbidden: adapters, apps, tools, tests, Tkinter/CustomTkinter, Django/DRF/drf-spectacular, sqlite3, reportlab, qrcode, barcode, Faker, PyInstaller, socket/ssl/http/urllib/subprocess/multiprocessing, pytest/hypothesis) e `core-camadas` (layers: services → ports → domain). **Verificado antes de escrever:** com `include_external_packages`, o import-linter detecta módulos da biblioteca padrão e aceita proibir pacotes que ainda não existem. **Testes negativos** (arquivo temporário em `core/domain`, removido depois): `import tkinter`, `from django.db import models`, `import core.services` dentro do domain e `from adapters.sqlite import repo` — cada um quebrou o contrato certo (saída 1); `tools/check.py` também falhou. Check de volta ao verde (2,5 s). Ajuste extra: `tools/check.py` força UTF-8 nas ferramentas (acentos saíam embaralhados com a saída redirecionada no Windows). Limitação registrada em §6.2: imports dinâmicos não são detectados. |
@@ -725,6 +728,9 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Comando de qualidade = `python tools/check.py`; `make check` só chama o script | Funciona igual no Windows (sem GNU make) e no CI |
 | 2026-10-27 | Ferramentas de dev em `[dependency-groups]` (PEP 735), não em extras | Não fazem parte do pacote publicado; `pip install --group dev` (pip ≥ 25.1) |
 | 2026-10-27 | Cobertura mínima de 90% já ativa desde a M0 | Mais simples ligar agora do que lembrar de ligar na M1 (RNF-001) |
+| 2026-10-27 | C4 em Mermaid `flowchart` com cores do C4, não a sintaxe `C4Context` | `C4Context` ainda é experimental no Mermaid, com layout pouco previsível no GitHub; `flowchart` renderiza igual em todo lugar |
+| 2026-10-27 | Só níveis 1 e 2 do C4 | Componentes e código já ficam claros pelo próprio código, ADRs e contratos do import-linter |
+| 2026-10-27 | Núcleo desenhado como **biblioteca dentro dos containers**, não como container próprio | É o que acontece em execução: roda no mesmo processo do app desktop e da API |
 | 2026-10-27 | Desktop com **repositórios próprios sobre `sqlite3`** (D-02, ADR-002) | Escolha do usuário; executável leve e demonstração de portas/adaptadores; Django ORM headless segue como plano B (P-08) |
 | 2026-10-27 | Requisitos e glossário movidos para `docs/` (fonte única); §8 e §20 viram ponteiros | Duas cópias divergiriam (R-05); o teste de coerência impede citar ID inexistente |
 | 2026-10-27 | Requisitos ganharam colunas "Invariantes" e "Portão" e uma tabela de lacunas | Rastreabilidade requisito ↔ caso de portão desde já; expôs 4 requisitos sem caso de portão |
