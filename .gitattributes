@@ -1,0 +1,16 @@
+# Normaliza finais de linha no repositório (LF); o Git converte no checkout conforme o SO.
+* text=auto eol=lf
+
+# Scripts do Windows mantêm CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binários
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.db binary
+*.sqlite3 binary

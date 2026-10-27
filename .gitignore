@@ -1,0 +1,64 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+*.spec.bak
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Ferramentas de qualidade / testes
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.import_linter_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# --- Node / frontend ---
+node_modules/
+apps/web/frontend/dist/
+.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Django ---
+staticfiles/
+media/
+
+# --- Bancos locais (dados nunca vão para o repo; o demo é gerado com semente fixa) ---
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+*.sqlite3-journal
+
+# --- Segredos (RNF-006) ---
+.env
+.env.*
+!.env.example
+
+# --- Playwright ---
+test-results/
+playwright-report/
+
+# --- Editores e SO ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- Claude Code (configuração local) ---
+.claude/settings.local.json
