@@ -87,8 +87,12 @@ def record_movement(
         policy = _policy(uow, policy)
         item = active_item(uow, command.item_id)
         location = active_location(uow, command.location_id)
-        if command.party_id is not None and not uow.parties.get(command.party_id).active:
-            raise InactiveRecordError("a parte informada está inativa")
+        if command.party_id is not None:
+            party = uow.parties.get(command.party_id)
+            if not party.active:
+                raise InactiveRecordError(
+                    f"a parte {party.name!r} está inativa", entity="party", record=party.name
+                )
         item_lot(uow, item, command.lot_id)
         use_fefo = (
             item.tracks_lots and command.lot_id is None and command.kind.direction is Direction.OUT
@@ -202,7 +206,11 @@ def _split_by_fefo(
     if remaining.value > 0:
         if policy is NegativeStockPolicy.FORBID or not usable:
             raise InsufficientStockError(
-                _fefo_shortage(uow, item, location, requested, remaining, expired)
+                _fefo_shortage(uow, item, location, requested, remaining, expired),
+                sku=item.sku,
+                location=location.name,
+                missing=remaining,
+                at=requested.occurred_at,
             )
         last = usable[-1]
         if taken and taken[-1][0] == last:

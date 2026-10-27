@@ -23,14 +23,16 @@ from core.ports.unit_of_work import UnitOfWork
 def active_item(uow: UnitOfWork, item_id: ItemId) -> Item:
     item = uow.items.get(item_id)
     if not item.active:
-        raise InactiveRecordError(f"o item {item.sku} está inativo")
+        raise InactiveRecordError(f"o item {item.sku} está inativo", entity="item", record=item.sku)
     return item
 
 
 def active_location(uow: UnitOfWork, location_id: LocationId) -> Location:
     location = uow.locations.get(location_id)
     if not location.active:
-        raise InactiveRecordError(f"o local {location.name!r} está inativo")
+        raise InactiveRecordError(
+            f"o local {location.name!r} está inativo", entity="location", record=location.name
+        )
     return location
 
 
@@ -58,7 +60,11 @@ def check_balance(uow: UnitOfWork, item: Item, location: Location, movement: Mov
     if negative is not None:
         raise InsufficientStockError(
             f"saldo insuficiente de {item.sku} em {location.name!r}: ficaria "
-            f"{negative.balance} em {negative.at:%d/%m/%Y %H:%M} UTC"
+            f"{negative.balance} em {negative.at:%d/%m/%Y %H:%M} UTC",
+            sku=item.sku,
+            location=location.name,
+            balance=negative.balance,
+            at=negative.at,
         )
 
 
@@ -103,11 +109,20 @@ def check_serials(uow: UnitOfWork, item: Item, new: Sequence[Movement]) -> None:
         else (f"em {uow.locations.get(conflict.current).name!r}")
     )
     when = f"{conflict.at:%d/%m/%Y %H:%M} UTC"
+    details: dict[str, object] = {
+        "sku": item.sku,
+        "serial": conflict.serial,
+        "problem": conflict.problem,
+        "location": here,
+        "at": conflict.at,
+    }
     if conflict.problem is SerialProblem.ALREADY_IN_STOCK:
         raise SerialNumberError(
             f"a série {conflict.serial} de {item.sku} já está {where} em {when}; "
-            f"não pode entrar em {here!r}"
+            f"não pode entrar em {here!r}",
+            **details,
         )
     raise SerialNumberError(
-        f"a série {conflict.serial} de {item.sku} não está em {here!r} em {when} (está {where})"
+        f"a série {conflict.serial} de {item.sku} não está em {here!r} em {when} (está {where})",
+        **details,
     )

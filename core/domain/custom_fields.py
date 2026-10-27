@@ -22,7 +22,7 @@ from uuid import UUID
 
 from core.domain.catalog import ItemKind
 from core.domain.entity import Entity, clean_text, require_type, set_field
-from core.domain.errors import ValidationError
+from core.domain.errors import CustomFieldError, ValidationError
 from core.domain.ids import CustomFieldId, new_custom_field_id
 
 type CustomValue = str | Decimal | date | bool
@@ -116,41 +116,37 @@ def _clean_kinds(value: object, key: str) -> frozenset[ItemKind]:
     return kinds
 
 
-def _error(key: str, message: str) -> ValidationError:
-    return ValidationError(f"custom_fields.{key}", message)
-
-
 def _check_value(definition: CustomFieldDefinition, value: object) -> CustomValue:
     key, label, kind = definition.key, definition.label, definition.field_type
     if kind is CustomFieldType.TEXT:
         if not isinstance(value, str):
-            raise _error(key, f"{label}: precisa ser texto")
+            raise CustomFieldError(key, f"{label}: precisa ser texto")
         limit = definition.max_length or TEXT_DEFAULT_MAX_LENGTH
         if len(value) > limit:
-            raise _error(key, f"{label}: passa de {limit} caracteres")
+            raise CustomFieldError(key, f"{label}: passa de {limit} caracteres")
         return value
     if kind is CustomFieldType.NUMBER:
         if isinstance(value, bool) or not isinstance(value, int | Decimal):
-            raise _error(key, f"{label}: precisa ser número (Decimal), não {value!r}")
+            raise CustomFieldError(key, f"{label}: precisa ser número (Decimal), não {value!r}")
         number = Decimal(value)
         if not number.is_finite() or (Fraction(number) * 10**6).denominator != 1:
-            raise _error(key, f"{label}: número inválido ou com mais de 6 casas: {value}")
+            raise CustomFieldError(key, f"{label}: número inválido ou com mais de 6 casas: {value}")
         if definition.min_value is not None and number < definition.min_value:
-            raise _error(key, f"{label}: menor que o mínimo {definition.min_value}")
+            raise CustomFieldError(key, f"{label}: menor que o mínimo {definition.min_value}")
         if definition.max_value is not None and number > definition.max_value:
-            raise _error(key, f"{label}: maior que o máximo {definition.max_value}")
+            raise CustomFieldError(key, f"{label}: maior que o máximo {definition.max_value}")
         return number
     if kind is CustomFieldType.DATE:
         if not isinstance(value, date) or isinstance(value, datetime):
-            raise _error(key, f"{label}: precisa ser uma data (dia), não {value!r}")
+            raise CustomFieldError(key, f"{label}: precisa ser uma data (dia), não {value!r}")
         return value
     if kind is CustomFieldType.BOOLEAN:
         if not isinstance(value, bool):
-            raise _error(key, f"{label}: precisa ser sim ou não, não {value!r}")
+            raise CustomFieldError(key, f"{label}: precisa ser sim ou não, não {value!r}")
         return value
     if not isinstance(value, str) or value not in definition.choices:
         options = ", ".join(definition.choices)
-        raise _error(key, f"{label}: {value!r} não é uma das opções ({options})")
+        raise CustomFieldError(key, f"{label}: {value!r} não é uma das opções ({options})")
     return value
 
 
@@ -173,9 +169,11 @@ def validate_custom_fields(
     for key, value in values.items():
         definition = by_key.get(key)
         if definition is None:
-            raise _error(key, f"campo personalizado {key!r} não existe")
+            raise CustomFieldError(key, f"campo personalizado {key!r} não existe")
         if kind not in definition.kinds:
-            raise _error(key, f"{definition.label}: não se aplica a itens do tipo {kind.value}")
+            raise CustomFieldError(
+                key, f"{definition.label}: não se aplica a itens do tipo {kind.value}"
+            )
         if _is_blank(value):
             continue
         if isinstance(value, str) and definition.field_type in (
@@ -186,7 +184,7 @@ def validate_custom_fields(
         cleaned[key] = _check_value(definition, value)
     for definition in by_key.values():
         if definition.required and kind in definition.kinds and definition.key not in cleaned:
-            raise _error(definition.key, f"{definition.label}: campo obrigatório")
+            raise CustomFieldError(definition.key, f"{definition.label}: campo obrigatório")
     return MappingProxyType(cleaned)
 
 
@@ -212,7 +210,7 @@ def decode_values(
     for key, value in raw.items():
         definition = by_key.get(key)
         if definition is None:
-            raise _error(key, f"campo personalizado {key!r} não existe")
+            raise CustomFieldError(key, f"campo personalizado {key!r} não existe")
         kind = definition.field_type
         try:
             if kind is CustomFieldType.NUMBER and isinstance(value, str):
@@ -224,7 +222,11 @@ def decode_values(
             ):
                 decoded[key] = value
             else:
-                raise _error(key, f"{definition.label}: valor gravado com tipo errado: {value!r}")
+                raise CustomFieldError(
+                    key, f"{definition.label}: valor gravado com tipo errado: {value!r}"
+                )
         except InvalidOperation, ValueError:
-            raise _error(key, f"{definition.label}: valor gravado ilegível: {value!r}") from None
+            raise CustomFieldError(
+                key, f"{definition.label}: valor gravado ilegível: {value!r}"
+            ) from None
     return decoded

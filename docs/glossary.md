@@ -42,7 +42,7 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Giro** | Quantas vezes o estoque se renova num período | — |
 | **Cobertura** | Dias que o estoque atual dura no ritmo de consumo | — |
 | **Ruptura** | Falta do item quando há demanda | — |
-| **Erro de domínio** | Regra de negócio violada, com mensagem legível em PT-BR; base de todos os erros do núcleo | `DomainError` |
+| **Erro de domínio** | Recusa do núcleo, com código estável (`rule.insufficient_stock`), categoria (`invalid`, `not_found`, `conflict`, `rule`), mensagem em PT-BR e detalhes estruturados (ADR-007) | `DomainError`, `ErrorKind`, `to_dict()` |
 
 ## Arquitetura
 

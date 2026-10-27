@@ -291,3 +291,19 @@ def test_system_clock_is_utc_and_current() -> None:
     now = SystemClock().now()
     assert now.tzinfo is UTC
     assert before <= now <= datetime.now(UTC)
+
+
+def test_repository_errors_say_what_and_which() -> None:
+    with MemoryUnitOfWork() as uow:
+        existing = item()
+        uow.items.add(existing)
+        with pytest.raises(ConflictError) as duplicate:
+            uow.items.add(item("par-001", "Outro"))
+        assert duplicate.value.details == {"entity": "item", "sku": "PAR-001"}
+        with pytest.raises(ConflictError) as same_id:
+            uow.items.add(existing)
+        assert same_id.value.details == {"entity": "item", "id": existing.id}
+        unknown = MovementId(uuid4())
+        with pytest.raises(NotFoundError) as missing:
+            uow.movements.get(unknown)
+        assert missing.value.to_dict()["details"] == {"entity": "movimentação", "id": str(unknown)}

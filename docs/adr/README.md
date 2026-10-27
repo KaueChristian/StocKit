@@ -11,3 +11,4 @@ Para criar um novo, copie o [template](template.md). Decisões menores ficam só
 | [ADR-004](004-livro-de-movimentacoes.md) | Estoque como livro de movimentações imutáveis; saldo sempre derivado | Aceito |
 | [ADR-005](005-campos-personalizados-em-json.md) | Campos personalizados guardados em JSON e validados por definição | Aceito |
 | [ADR-006](006-quantidades-com-escala-fixa.md) | Quantidades com escala fixa de 6 casas e conversão com um único arredondamento half-even | Aceito |
+| [ADR-007](007-erros-de-dominio-tipados.md) | Erros de domínio com código estável, categoria e detalhes estruturados | Aceito |

@@ -314,3 +314,14 @@ def test_fefo_never_skips_a_valid_lot_that_still_had_stock(
     last_used = max(i for i, lot in enumerate(valid) if lot.id in used)
     for lot in valid[:last_used]:
         assert remaining.get(lot.code, Decimal(0)) == 0, f"{lot.code} ficou com saldo"
+
+
+def test_fefo_shortage_details(dairy: Dairy) -> None:
+    lot = dairy.lot("L1", TODAY + timedelta(days=3))
+    dairy.record(IN, 2, lot=lot, days_ago=1)
+    with pytest.raises(InsufficientStockError) as error:
+        dairy.record(OUT, 5)
+    assert error.value.details["missing"] == Quantity(Decimal(3), UN)
+    details = error.value.to_dict()["details"]
+    assert isinstance(details, dict)
+    assert details["missing"] == "3 un"

@@ -69,19 +69,25 @@ class _Registry[E: Entity, K]:
         try:
             return self._data[entity_id]
         except KeyError:
-            raise NotFoundError(f"{self._label} não encontrado(a): {entity_id}") from None
+            raise NotFoundError(
+                f"{self._label} não encontrado(a): {entity_id}", entity=self._label, id=entity_id
+            ) from None
 
     def add(self, entity: E) -> None:
         key = self._key(entity)
         if key in self._data:
-            raise ConflictError(f"{self._label} já cadastrado(a): {key}")
+            raise ConflictError(
+                f"{self._label} já cadastrado(a): {key}", entity=self._label, id=key
+            )
         self._check_unique(entity)
         self._data[key] = entity
 
     def update(self, entity: E) -> None:
         key = self._key(entity)
         if key not in self._data:
-            raise NotFoundError(f"{self._label} não encontrado(a) para atualizar: {key}")
+            raise NotFoundError(
+                f"{self._label} não encontrado(a) para atualizar: {key}", entity=self._label, id=key
+            )
         self._check_unique(entity)
         self._data[key] = entity
 
@@ -105,7 +111,11 @@ class MemoryItemRepository(_Registry[Item, ItemId]):
     def _check_unique(self, entity: Item) -> None:
         other = self.find_by_sku(entity.sku)
         if other is not None and other.id != entity.id:
-            raise ConflictError(f"SKU {entity.sku} já pertence a outro item ({other.name})")
+            raise ConflictError(
+                f"SKU {entity.sku} já pertence a outro item ({other.name})",
+                entity="item",
+                sku=entity.sku,
+            )
 
 
 def _by_name(entity: Category | Location | Party) -> str:
@@ -149,7 +159,9 @@ class MemoryLotRepository(_Registry[Lot, LotId]):
     def _check_unique(self, entity: Lot) -> None:
         other = self.find_by_code(entity.item_id, entity.code)
         if other is not None and other.id != entity.id:
-            raise ConflictError(f"o item já tem um lote com o código {entity.code}")
+            raise ConflictError(
+                f"o item já tem um lote com o código {entity.code}", entity="lote", code=entity.code
+            )
 
 
 class MemoryCustomFieldRepository(_Registry[CustomFieldDefinition, CustomFieldId]):
@@ -165,7 +177,9 @@ class MemoryCustomFieldRepository(_Registry[CustomFieldDefinition, CustomFieldId
     def _check_unique(self, entity: CustomFieldDefinition) -> None:
         other = self.find_by_key(entity.key)
         if other is not None and other.id != entity.id:
-            raise ConflictError(f"já existe um campo com a chave {entity.key}")
+            raise ConflictError(
+                f"já existe um campo com a chave {entity.key}", entity="campo", key=entity.key
+            )
 
 
 class MemorySettingsRepository:
@@ -189,14 +203,18 @@ class MemoryMovementRepository:
 
     def append(self, movement: Movement) -> None:
         if any(existing.id == movement.id for existing in self._data):
-            raise ConflictError(f"movimentação já lançada: {movement.id}")
+            raise ConflictError(
+                f"movimentação já lançada: {movement.id}", entity="movimentação", id=movement.id
+            )
         self._data.append(movement)
 
     def get(self, movement_id: MovementId) -> Movement:
         for movement in self._data:
             if movement.id == movement_id:
                 return movement
-        raise NotFoundError(f"movimentação não encontrada: {movement_id}")
+        raise NotFoundError(
+            f"movimentação não encontrada: {movement_id}", entity="movimentação", id=movement_id
+        )
 
     def list(
         self,
@@ -222,4 +240,8 @@ class MemoryMovementRepository:
         try:
             return sides[MovementKind.TRANSFER_OUT], sides[MovementKind.TRANSFER_IN]
         except KeyError:
-            raise NotFoundError(f"par de transferência incompleto: {transfer_id}") from None
+            raise NotFoundError(
+                f"par de transferência incompleto: {transfer_id}",
+                entity="transferência",
+                id=transfer_id,
+            ) from None

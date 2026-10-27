@@ -291,3 +291,28 @@ def test_movement_rules_still_apply(world: World) -> None:
     with pytest.raises(ValidationError, match="autor"):
         world.record(IN, "1", author=" ")
     assert world.state.movements == []
+
+
+def test_errors_carry_structured_details(world: World) -> None:
+    """M1.13: telas e API leem os detalhes sem analisar a mensagem."""
+    world.record(IN, "5")
+    with pytest.raises(InsufficientStockError) as shortage:
+        world.record(OUT, "7")
+    details = shortage.value.to_dict()["details"]
+    assert details == {
+        "sku": "PAR-001",
+        "location": "Loja",
+        "balance": "-2 un",
+        "at": NOW.isoformat(),
+    }
+    assert shortage.value.to_dict()["code"] == "rule.insufficient_stock"
+    with world.uow() as uow:
+        uow.parties.update(world.supplier.deactivated())
+        uow.commit()
+    with pytest.raises(InactiveRecordError) as inactive:
+        world.record(IN, "1", party_id=world.supplier.id)
+    assert inactive.value.details == {"entity": "party", "record": "Fornecedor"}
+    with pytest.raises(NotFoundError) as missing:
+        world.record(IN, "1", item_id=ItemId(uuid4()))
+    assert missing.value.details["entity"] == "item"
+    assert missing.value.kind.value == "not_found"

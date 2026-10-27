@@ -254,3 +254,15 @@ def test_a_serial_is_never_in_two_places_and_balances_are_whole(
         assert (own.value if own else 0) == expected
     total = item_balance(s.uow(), s.laptop.id).value
     assert total == total.to_integral_value() == sum(1 for w in positions.values() if w)
+
+
+def test_serial_error_details(shop: Shop) -> None:
+    with pytest.raises(SerialNumberError) as error:
+        shop.record(OUT, "SN-1", at=shop.sala)
+    assert error.value.to_dict()["details"] == {
+        "sku": "NOTE",
+        "serial": "SN-1",
+        "problem": "not_here",
+        "location": "Sala TI",
+        "at": NOW.isoformat(),
+    }
