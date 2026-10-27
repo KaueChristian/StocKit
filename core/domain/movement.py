@@ -182,8 +182,10 @@ def make_transfer(
     author: str,
     lot_id: LotId | None = None,
     reason: str | None = None,
+    recorded_at: datetime | None = None,
 ) -> tuple[Movement, Movement]:
-    """Monta o par (saída na origem, entrada no destino). Gravar os dois juntos: serviço (M1.8)."""
+    """Monta o par (saída na origem, entrada no destino). Gravar os dois juntos é do serviço
+    ``transfer_stock`` (M1.8)."""
     if from_location == to_location:
         raise ValidationError("to_location", "transferência precisa de locais diferentes")
     transfer_id = new_transfer_id()
@@ -199,6 +201,7 @@ def make_transfer(
             lot_id=lot_id,
             reason=reason,
             transfer_id=transfer_id,
+            recorded_at=recorded_at,
         )
 
     return side(MovementKind.TRANSFER_OUT, from_location), side(

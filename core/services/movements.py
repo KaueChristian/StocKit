@@ -1,8 +1,9 @@
-"""Registrar movimentações (M1.6, RF-005, RF-007, INV-05).
+"""Registrar movimentações e transferências (M1.6, M1.8; RF-005, RF-007, INV-03, INV-05).
 
-O serviço é o único caminho para lançar entrada, saída, ajuste, perda e devolução: confere os
-cadastros, converte a quantidade para a unidade base do item, aplica a política de saldo negativo
-e grava tudo numa Unit of Work — ou nada. Transferência tem serviço próprio (M1.8).
+São os únicos caminhos para lançar no livro: conferem os cadastros, convertem a quantidade para a
+unidade base do item, aplicam a política de saldo negativo e gravam numa Unit of Work — tudo ou
+nada. ``record_movement`` lança uma movimentação; ``transfer_stock`` lança as duas pontas de uma
+transferência juntas.
 """
 
 from dataclasses import dataclass
@@ -18,7 +19,8 @@ from core.domain.errors import (
 )
 from core.domain.ids import ItemId, LocationId, LotId, PartyId
 from core.domain.ledger import first_negative_from
-from core.domain.movement import Movement, MovementKind
+from core.domain.location import Location
+from core.domain.movement import Movement, MovementKind, make_transfer
 from core.domain.policy import NegativeStockPolicy
 from core.domain.quantity import Quantity
 from core.ports.clock import Clock
@@ -45,6 +47,20 @@ class RecordMovement:
     reason: str | None = None
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TransferStock:
+    """Pedido de transferência entre dois locais. Mesmas regras de unidade do ``RecordMovement``."""
+
+    item_id: ItemId
+    from_location: LocationId
+    to_location: LocationId
+    quantity: Quantity
+    author: str
+    occurred_at: datetime | None = None
+    lot_id: LotId | None = None
+    reason: str | None = None
+
+
 def record_movement(
     uow: UnitOfWork,
     clock: Clock,
@@ -56,15 +72,10 @@ def record_movement(
     if command.kind.is_transfer:
         raise ValidationError("kind", "transferência tem serviço próprio (as duas pontas juntas)")
     now = clock.now()
-    occurred_at = command.occurred_at if command.occurred_at is not None else now
 
     with uow:
-        item = uow.items.get(command.item_id)
-        location = uow.locations.get(command.location_id)
-        if not item.active:
-            raise InactiveRecordError(f"o item {item.sku} está inativo")
-        if not location.active:
-            raise InactiveRecordError(f"o local {location.name!r} está inativo")
+        item = _active_item(uow, command.item_id)
+        location = _active_location(uow, command.location_id)
         if command.party_id is not None and not uow.parties.get(command.party_id).active:
             raise InactiveRecordError("a parte informada está inativa")
         _check_lot(item, command.lot_id)
@@ -74,7 +85,7 @@ def record_movement(
             item_id=item.id,
             location_id=location.id,
             quantity=_in_base_unit(item, command.quantity),
-            occurred_at=occurred_at,
+            occurred_at=command.occurred_at if command.occurred_at is not None else now,
             recorded_at=now,
             author=command.author,
             lot_id=command.lot_id,
@@ -83,18 +94,73 @@ def record_movement(
             reason=command.reason,
         )
         if policy is NegativeStockPolicy.FORBID:
-            history = uow.movements.list(
-                item_id=item.id, location_id=location.id, lot_id=command.lot_id
-            )
-            negative = first_negative_from(history, movement, item.base_unit)
-            if negative is not None:
-                raise InsufficientStockError(
-                    f"saldo insuficiente de {item.sku} em {location.name!r}: ficaria "
-                    f"{negative.balance} em {negative.at:%d/%m/%Y %H:%M} UTC"
-                )
+            _check_balance(uow, item, location, movement)
         uow.movements.append(movement)
         uow.commit()
     return movement
+
+
+def transfer_stock(
+    uow: UnitOfWork,
+    clock: Clock,
+    command: TransferStock,
+    *,
+    policy: NegativeStockPolicy = NegativeStockPolicy.FORBID,
+) -> tuple[Movement, Movement]:
+    """Lança saída na origem e entrada no destino, juntas (INV-03). Devolve (saída, entrada).
+
+    A política de saldo negativo vale na origem; o destino só ganha. Se qualquer passo falhar,
+    nenhuma das pontas fica gravada.
+    """
+    now = clock.now()
+    with uow:
+        item = _active_item(uow, command.item_id)
+        origin = _active_location(uow, command.from_location)
+        destination = _active_location(uow, command.to_location)
+        _check_lot(item, command.lot_id)
+
+        outgoing, incoming = make_transfer(
+            item_id=item.id,
+            from_location=origin.id,
+            to_location=destination.id,
+            quantity=_in_base_unit(item, command.quantity),
+            occurred_at=command.occurred_at if command.occurred_at is not None else now,
+            recorded_at=now,
+            author=command.author,
+            lot_id=command.lot_id,
+            reason=command.reason,
+        )
+        if policy is NegativeStockPolicy.FORBID:
+            _check_balance(uow, item, origin, outgoing)
+        uow.movements.append(outgoing)
+        uow.movements.append(incoming)
+        uow.commit()
+    return outgoing, incoming
+
+
+def _active_item(uow: UnitOfWork, item_id: ItemId) -> Item:
+    item = uow.items.get(item_id)
+    if not item.active:
+        raise InactiveRecordError(f"o item {item.sku} está inativo")
+    return item
+
+
+def _active_location(uow: UnitOfWork, location_id: LocationId) -> Location:
+    location = uow.locations.get(location_id)
+    if not location.active:
+        raise InactiveRecordError(f"o local {location.name!r} está inativo")
+    return location
+
+
+def _check_balance(uow: UnitOfWork, item: Item, location: Location, movement: Movement) -> None:
+    """Recusa se algum ponto do livro, a partir da movimentação, ficar negativo (INV-05)."""
+    history = uow.movements.list(item_id=item.id, location_id=location.id, lot_id=movement.lot_id)
+    negative = first_negative_from(history, movement, item.base_unit)
+    if negative is not None:
+        raise InsufficientStockError(
+            f"saldo insuficiente de {item.sku} em {location.name!r}: ficaria "
+            f"{negative.balance} em {negative.at:%d/%m/%Y %H:%M} UTC"
+        )
 
 
 def _in_base_unit(item: Item, quantity: Quantity) -> Quantity:
