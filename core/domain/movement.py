@@ -13,6 +13,7 @@ de saldo negativo (INV-05) e carimbar ``recorded_at`` com o ``Clock``. ``occurre
 aconteceu; ``recorded_at``, quando foi lançado (auditoria de lançamento retroativo).
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -93,6 +94,7 @@ class Movement(Entity):
     reason: str | None = None
     transfer_id: TransferId | None = None
     recorded_at: datetime | None = None
+    serials: frozenset[str] = frozenset()
     id: MovementId = field(default_factory=new_movement_id)
 
     def __post_init__(self) -> None:
@@ -124,6 +126,7 @@ class Movement(Entity):
         set_field(self, "author", clean_text(self.author, "author", "autor", max_length=120))
         set_field(self, "unit_cost", _clean_cost(self.unit_cost))
         set_field(self, "reason", _clean_reason(self.reason, self.kind))
+        set_field(self, "serials", _clean_serials(self.serials, self.quantity))
 
         if self.kind.is_transfer and self.transfer_id is None:
             raise ValidationError("transfer_id", "movimentação de transferência precisa do par")
@@ -164,6 +167,37 @@ def _clean_cost(value: object) -> Decimal | None:
     return value
 
 
+SERIAL_MAX_LENGTH = 64
+
+
+def normalize_serial(value: object) -> str:
+    """Número de série sem espaços nas pontas e em maiúsculas; sem espaço no meio."""
+    if not isinstance(value, str):
+        raise ValidationError("serials", f"número de série precisa ser texto: {value!r}")
+    serial = value.strip().upper()
+    if not serial or len(serial) > SERIAL_MAX_LENGTH or any(ch.isspace() for ch in serial):
+        raise ValidationError(
+            "serials", f"número de série inválido: {value!r} (sem espaços, até {SERIAL_MAX_LENGTH})"
+        )
+    return serial
+
+
+def _clean_serials(value: object, quantity: Quantity) -> frozenset[str]:
+    """Séries normalizadas. Se houver séries, a quantidade é exatamente quantas são (INV-07)."""
+    if isinstance(value, str) or not isinstance(value, Iterable):
+        raise ValidationError("serials", "números de série precisam vir numa coleção")
+    items = list(value)
+    serials = frozenset(normalize_serial(s) for s in items)
+    if len(serials) != len(items):
+        raise ValidationError("serials", "número de série repetido na mesma movimentação")
+    if serials and quantity.value != len(serials):
+        raise ValidationError(
+            "quantity",
+            f"a quantidade ({quantity}) precisa ser igual ao número de séries ({len(serials)})",
+        )
+    return serials
+
+
 def _clean_reason(value: object, kind: MovementKind) -> str | None:
     if value is None or (isinstance(value, str) and not value.strip()):
         if kind.requires_reason:
@@ -183,6 +217,7 @@ def make_transfer(
     lot_id: LotId | None = None,
     reason: str | None = None,
     recorded_at: datetime | None = None,
+    serials: frozenset[str] = frozenset(),
 ) -> tuple[Movement, Movement]:
     """Monta o par (saída na origem, entrada no destino). Gravar os dois juntos é do serviço
     ``transfer_stock`` (M1.8)."""
@@ -202,6 +237,7 @@ def make_transfer(
             reason=reason,
             transfer_id=transfer_id,
             recorded_at=recorded_at,
+            serials=serials,
         )
 
     return side(MovementKind.TRANSFER_OUT, from_location), side(
@@ -216,7 +252,7 @@ def check_transfer_pair(first: Movement, second: Movement) -> None:
         raise ValidationError("kind", "um par de transferência tem uma saída e uma entrada")
     differences = [
         name
-        for name in ("transfer_id", "item_id", "quantity", "lot_id", "occurred_at")
+        for name in ("transfer_id", "item_id", "quantity", "lot_id", "occurred_at", "serials")
         if getattr(first, name) != getattr(second, name)
     ]
     if differences:

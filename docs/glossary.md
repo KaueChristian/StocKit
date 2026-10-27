@@ -18,7 +18,8 @@ Interface e documentação em PT-BR; identificadores de código em inglês (colu
 | **Hierarquia de locais** | Conjunto de locais sem ciclo e sem irmãos com o mesmo nome; dá o caminho completo e os descendentes | `LocationTree` |
 | **Parte** | Fornecedor, cliente ou setor; pode ter mais de um papel; o rótulo do papel vem do perfil | `Party`, `PartyRole` |
 | **Lote** | Grupo de unidades de um item com código (único no item) e, se o item controla validade, data de validade (vale até o dia, inclusive) | `Lot`, `create_lot` |
-| **Item serializado** | Item controlado por unidade, cada uma com número de série único; unidade base de contagem com fator 1 | `ItemKind.SERIALIZED` |
+| **Item serializado** | Item controlado por unidade, cada uma com número de série único; unidade base de contagem com fator 1 | `ItemKind.SERIALIZED`; séries em `Movement.serials` |
+| **Número de série** | Identifica uma unidade física de item serializado; está em estoque num local ou fora. Entradas e saídas de cada série se alternam | `serial_location`, `serials_in_stock` |
 | **Movimentação** | Registro imutável de entrada, saída, transferência, ajuste, perda ou devolução; quantidade sempre positiva, o tipo dá a direção | `Movement` |
 | **Tipo de movimentação** | Entrada, saída, transferência (saída/entrada), ajuste (para mais/para menos), perda, devolução de cliente, devolução a fornecedor | `MovementKind` |
 | **Livro (ledger)** | Sequência de movimentações da qual o saldo é derivado | — |

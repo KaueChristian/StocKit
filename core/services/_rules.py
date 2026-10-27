@@ -1,10 +1,13 @@
 """Regras comuns aos serviços de lançamento (uso interno do pacote ``core.services``)."""
 
-from core.domain.catalog import Item
+from collections.abc import Sequence
+
+from core.domain.catalog import Item, ItemKind
 from core.domain.errors import (
     InactiveRecordError,
     IncompatibleUnitsError,
     InsufficientStockError,
+    SerialNumberError,
     ValidationError,
 )
 from core.domain.ids import ItemId, LocationId, LotId
@@ -13,6 +16,7 @@ from core.domain.location import Location
 from core.domain.lot import Lot
 from core.domain.movement import Movement
 from core.domain.quantity import Quantity
+from core.domain.serials import SerialProblem, first_serial_conflict
 from core.ports.unit_of_work import UnitOfWork
 
 
@@ -67,3 +71,43 @@ def in_base_unit(item: Item, quantity: Quantity) -> Quantity:
             f"{item.sku}); lance na unidade base"
         )
     return converted
+
+
+def serial_quantity(item: Item, quantity: Quantity, serials: frozenset[str]) -> None:
+    """Item serializado: quantidade inteira e números de série informados; outros: sem séries."""
+    if item.kind is not ItemKind.SERIALIZED:
+        if serials:
+            raise ValidationError("serials", f"o item {item.sku} não é serializado")
+        return
+    if quantity.value != quantity.value.to_integral_value():
+        raise ValidationError(
+            "quantity", f"item serializado ({item.sku}) não tem quantidade fracionária: {quantity}"
+        )
+    if not serials:
+        raise ValidationError(
+            "serials", f"o item {item.sku} é serializado: informe os números de série"
+        )
+
+
+def check_serials(uow: UnitOfWork, item: Item, new: Sequence[Movement]) -> None:
+    """Nenhuma série em dois lugares, nem saindo de onde não está (INV-07)."""
+    if item.kind is not ItemKind.SERIALIZED:
+        return
+    conflict = first_serial_conflict(uow.movements.list(item_id=item.id), new)
+    if conflict is None:
+        return
+    here = uow.locations.get(conflict.location_id).name
+    where = (
+        "fora do estoque"
+        if conflict.current is None
+        else (f"em {uow.locations.get(conflict.current).name!r}")
+    )
+    when = f"{conflict.at:%d/%m/%Y %H:%M} UTC"
+    if conflict.problem is SerialProblem.ALREADY_IN_STOCK:
+        raise SerialNumberError(
+            f"a série {conflict.serial} de {item.sku} já está {where} em {when}; "
+            f"não pode entrar em {here!r}"
+        )
+    raise SerialNumberError(
+        f"a série {conflict.serial} de {item.sku} não está em {here!r} em {when} (está {where})"
+    )

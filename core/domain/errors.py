@@ -48,3 +48,7 @@ class InactiveRecordError(DomainError):
 
 class InsufficientStockError(DomainError):
     """Saída deixaria o saldo negativo e a política proíbe (INV-05)."""
+
+
+class SerialNumberError(DomainError):
+    """Número de série em lugar impossível: entra já estando em estoque, ou sai de onde não está."""

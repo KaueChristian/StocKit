@@ -89,6 +89,11 @@ class Item(Entity):
                 f"item serializado ({self.sku}) precisa de unidade de contagem com fator 1, "
                 f"não {self.base_unit}",
             )
+        if self.kind is ItemKind.SERIALIZED and self.tracks_lots:
+            raise ValidationError(
+                "tracks_lots",
+                f"item serializado ({self.sku}) é controlado por número de série, não por lote",
+            )
 
     def deactivated(self) -> Self:
         """Inativa o item (RF-001). O histórico continua; nada é apagado."""

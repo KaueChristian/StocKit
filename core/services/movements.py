@@ -25,9 +25,11 @@ from core.services._rules import (
     active_item,
     active_location,
     check_balance,
+    check_serials,
     in_base_unit,
     item_lot,
     require_lot,
+    serial_quantity,
 )
 
 
@@ -50,6 +52,7 @@ class RecordMovement:
     party_id: PartyId | None = None
     unit_cost: Decimal | None = None
     reason: str | None = None
+    serials: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -64,6 +67,7 @@ class TransferStock:
     occurred_at: datetime | None = None
     lot_id: LotId | None = None
     reason: str | None = None
+    serials: frozenset[str] = frozenset()
 
 
 def record_movement(
@@ -91,11 +95,14 @@ def record_movement(
         if not use_fefo:
             require_lot(item, command.lot_id)
 
+        quantity = in_base_unit(item, command.quantity)
+        serial_quantity(item, quantity, command.serials)
         movement = Movement(
             kind=command.kind,
             item_id=item.id,
             location_id=location.id,
-            quantity=in_base_unit(item, command.quantity),
+            quantity=quantity,
+            serials=command.serials,
             occurred_at=command.occurred_at if command.occurred_at is not None else now,
             recorded_at=now,
             author=command.author,
@@ -107,6 +114,7 @@ def record_movement(
         movements = (
             _split_by_fefo(uow, item, location, movement, policy) if use_fefo else (movement,)
         )
+        check_serials(uow, item, movements)
         for each in movements:
             if policy is NegativeStockPolicy.FORBID:
                 check_balance(uow, item, location, each)
@@ -135,17 +143,21 @@ def transfer_stock(
         item_lot(uow, item, command.lot_id)
         require_lot(item, command.lot_id)
 
+        quantity = in_base_unit(item, command.quantity)
+        serial_quantity(item, quantity, command.serials)
         outgoing, incoming = make_transfer(
             item_id=item.id,
             from_location=origin.id,
             to_location=destination.id,
-            quantity=in_base_unit(item, command.quantity),
+            quantity=quantity,
+            serials=command.serials,
             occurred_at=command.occurred_at if command.occurred_at is not None else now,
             recorded_at=now,
             author=command.author,
             lot_id=command.lot_id,
             reason=command.reason,
         )
+        check_serials(uow, item, (outgoing, incoming))
         if policy is NegativeStockPolicy.FORBID:
             check_balance(uow, item, origin, outgoing)
         uow.movements.append(outgoing)

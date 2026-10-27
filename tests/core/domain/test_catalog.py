@@ -175,3 +175,9 @@ def test_category_rejects_invalid_id() -> None:
 
 def test_validation_errors_are_domain_errors() -> None:
     assert issubclass(ValidationError, DomainError)
+
+
+def test_serialized_item_cannot_track_lots() -> None:
+    with pytest.raises(ValidationError, match="número de série") as error:
+        make_item(kind=ItemKind.SERIALIZED, tracks_lots=True)
+    assert error.value.field == "tracks_lots"
