@@ -52,12 +52,12 @@
 
 | Campo | Valor |
 |---|---|
-| Milestone aberto | **M0 — Fundação** (portão aprovado; falta marcar `v0.0.1`) |
-| Última etapa concluída | **M0.10** — teste sentinela do import-linter e testes reais da RNF-006 ligados por `req`; **todas as etapas do M0 concluídas** (2026-10-27) |
-| Próxima etapa | Marcar `v0.0.1` e levar a `dev` para a `main` (saída do M0); depois **M1.1** |
-| Bloqueios | Tag `v0.0.1` e merge na `main` são publicação: só com pedido explícito do usuário (§0) |
+| Milestone aberto | **M1 — Núcleo de domínio** (nenhuma etapa iniciada) |
+| Última etapa concluída | **M0 fechado** — portão aprovado, `main` = `dev` e tag `v0.0.1` (2026-10-27) |
+| Próxima etapa | **M1.1** — value objects `Quantity` e `UnidadeDeMedida`, com conversões (INV-04) |
+| Bloqueios | Nenhum |
 | Último portão aprovado | **M0** — 2026-10-27, 6 de 6 casos, BUG-01 achado e corrigido (§11) |
-| Versão | 0.0.0 (código público em [KaueChristian/StocKit](https://github.com/KaueChristian/StocKit); nenhuma versão marcada) |
+| Versão | **0.0.1** — tag `v0.0.1` na `main` ([KaueChristian/StocKit](https://github.com/KaueChristian/StocKit)) |
 | Bugs abertos | 0 (BUG-01 corrigido) |
 
 ---
@@ -315,7 +315,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 ---
 
-### M0 — Fundação · tamanho M · `v0.0.x`
+### M0 — Fundação · tamanho M · `v0.0.x` · ✅ fechado em 2026-10-27 (`v0.0.1`)
 **Objetivo:** poder evoluir rápido sem perder o alinhamento entre código, doc e processo.
 
 | ID | Etapa | Tam. | Status |
@@ -588,7 +588,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | Data | Milestone | Commit/versão | Casos executados | Falhas (IDs) | Bugs abertos | Decisão |
 |---|---|---|---|---|---|---|
 | 2026-10-27 | M0 | `3e55ded` (`dev`), local, Windows 11 / Python 3.14.3 | TP-M0-01 ★, TP-M0-02 ★ (parte local), TP-M0-05 ★, TP-M0-06 — 4 de 6 | nenhuma | 0 | **Sem decisão (parcial).** TP-M0-03 ★ e TP-M0-04 pendentes (exigem GitHub). M0 **não fecha** e `v0.0.1` não é marcado até executá-los. Detalhes e evidências: [`docs/test-plan/M0-portao.md`](docs/test-plan/M0-portao.md) |
-| 2026-10-27 | M0 | `cad3790` → `4d6867b` (`dev`), GitHub Actions (Ubuntu + Windows, Python 3.14.8/3.14.9) + navegador | TP-M0-02 ★ (parte CI), TP-M0-03 ★, TP-M0-04 — completam 6 de 6 | TP-M0-03 no 1º run (BUG-01) → corrigido e repetido: ok | 0 (BUG-01 corrigido em `4d6867b`) | **Go — portão M0 aprovado.** Críticos 100%. Regressão após a correção: CI verde na `dev` (`4d6867b`, instalação do zero nos dois sistemas) e check local verde (138 testes). Saída pendente: tag `v0.0.1` e merge na `main` (aguardam pedido do usuário). Evidências: [`TP-M0-03.md`](docs/test-plan/evidencias/M0/TP-M0-03.md) |
+| 2026-10-27 | M0 | `cad3790` → `4d6867b` (`dev`), GitHub Actions (Ubuntu + Windows, Python 3.14.8/3.14.9) + navegador | TP-M0-02 ★ (parte CI), TP-M0-03 ★, TP-M0-04 — completam 6 de 6 | TP-M0-03 no 1º run (BUG-01) → corrigido e repetido: ok | 0 (BUG-01 corrigido em `4d6867b`) | **Go — portão M0 aprovado.** Críticos 100%. Regressão após a correção: CI verde na `dev` (`4d6867b`, instalação do zero nos dois sistemas) e check local verde (138 testes). Saída: `main` avançada até a `dev` (fast-forward) e tag `v0.0.1`, a pedido do usuário. Evidências: [`TP-M0-03.md`](docs/test-plan/evidencias/M0/TP-M0-03.md) |
 
 **Template de caso de teste manual** (usar em `docs/test-plan/`):
 `ID · Título · Pré-condição · Passos · Resultado esperado · Evidência (print/log) · Status · Observações`.
@@ -628,7 +628,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Milestone | Etapas entregues | Esforço real | Tamanho previsto | Observações |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| M0 | 10 de 10 (M0.1–M0.10) + portão | 1 dia corrido (2026-10-27), em várias sessões | M | Portão achou 1 bug (BUG-01, CI no Windows); nenhuma etapa descartada |
 
 ---
 
@@ -638,6 +638,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 
 | Data | Registro |
 |---|---|
+| 2026-10-27 | **M0 fechado — `v0.0.1`.** A pedido do usuário: versão do `pyproject.toml` 0.0.0 → 0.0.1, `main` avançada até a `dev` por fast-forward (sem commit de merge; histórico igual nas duas) e tag anotada `v0.0.1` publicada. CI verde na `dev` antes de mover a `main`. Milestone aberto passa a ser o M1. Lição: nenhuma nova. |
 | 2026-10-27 | **Portão M0 aprovado (execução 2, GitHub).** Repositório criado **público** em `KaueChristian/StocKit` a pedido do usuário; `main` e `dev` publicadas. **Achado:** o 1º CI da `dev` falhou só no Windows — `tools/check.py` quebrou com `FileNotFoundError` ao chamar `lint-imports`. **Causa (fato, pelo log e pelo código):** o script procurava executáveis ao lado do `python.exe`, o que só vale num venv; no runner, que usa o Python sem venv, eles ficam em `Scripts\`. Localmente nunca apareceu porque o check sempre rodou no `.venv`. **Correção** (`4d6867b`, BUG-01): caminho via `sysconfig.get_path("scripts")`; ferramenta ausente vira "FALHA" no resumo em vez de traceback; 2 testes novos. CI da `dev` verde nos dois sistemas. **TP-M0-02 (CI):** PR #1 com `import tkinter` usado → `check` falhou no Ubuntu e no Windows pelo contrato `core-puro`. **TP-M0-03:** sem o import, 3 jobs verdes; PR fechado sem merge e branch apagada. Os commits da branch de teste foram feitos pela API do GitHub, para o import chegar ao CI sem pular ganchos locais. **TP-M0-04:** os dois C4 renderizam no GitHub. Resultado: **6 de 6, go.** Lições: (1) o CI em outro SO e sem venv achou um defeito que nenhum teste local podia achar — vale para o empacotamento (M3); (2) IDs de bug passam a usar `BUG-xx`, porque `B-xx` já é do backlog (§12). Pendente: tag `v0.0.1` e merge na `main`, só com pedido do usuário. |
 | 2026-10-27 | **Portão M0 — execução parcial (local).** Sobre o commit `3e55ded`: **TP-M0-01** ★ passou (clone limpo seguindo só o README, check verde em 36 s); **TP-M0-02** ★ passou na parte local (`lint-imports` e `tools/check.py` saíram com 1, commit bloqueado); **TP-M0-05** ★ passou (matriz com RNF-006 ligada a 18 testes verdes); **TP-M0-06** passou (estrutura automática + revisão das afirmações dos ADRs contra o repositório; revisão feita pelo autor). **Achado no TP-M0-02:** com `import tkinter` sem uso, o gancho `ruff check --fix` apagou o import antes do import-linter rodar, e o gancho do import-linter apareceu "Passed" (commit barrado pelo ruff). Causa comprovada pelo log ("1 fixed") e pelo arquivo vazio depois do commit; rodando o gancho isolado, ele acusa a violação. Repetido com import usado: gancho do import-linter falhou como esperado. **Não é bug** — lição: casos de violação usam import usado. TP-M0-03 ★ e TP-M0-04 **pendentes** (GitHub). Evidências em `docs/test-plan/evidencias/M0/`; registro no §11. Corrigida também a linha "Bloqueios" do painel (§1), que tinha uma célula sobrando por uma edição incompleta na M0.10 (o teste de coerência não confere o formato das tabelas). |
 | 2026-10-27 | **M0.10 concluída — todas as etapas do M0 prontas.** Feito: `tests/architecture/test_import_contracts.py` — copia `core` e `pyproject.toml` para pasta temporária, planta imports proibidos e roda o import-linter em subprocesso com `PYTHONPATH` apontando para a cópia (confirmado antes, por experimento, que a cópia vence a instalação editável); 1 caso de controle (cópia limpa passa) + 6 violações (tkinter, django, sqlite3, adapters, domain→services, ports→services), cada uma quebrando o contrato certo; 2,1 s. **Prova inversa:** tirar `tkinter` da lista de proibidos fez falhar exatamente o caso `tkinter` (configuração restaurada). `tests/project/test_dependency_pins.py` com `@pytest.mark.req("RNF-006")`: toda dependência declarada com `==`, versões do pre-commit e do workflow iguais às do grupo `dev`, `rev` do ruff igual ao ruff do grupo, actions por hash, `.env`/`*.db`/`*.sqlite3` no `.gitignore` (18 casos); com versão divergente e uma dependência sem pin plantadas, falharam os casos esperados. pre-commit: gancho do pytest ganhou `import-linter` (a sentinela precisa dele). Matriz de rastreabilidade: **1 de 34** requisitos com teste (RNF-006, 18 testes, todos verdes). Total: 128 testes. |
@@ -739,6 +740,7 @@ Ordem de execução = ordem de leitura. IDs de etapa (`M3.4`) são para commits,
 | 2026-10-27 | Cobertura mínima de 90% já ativa desde a M0 | Mais simples ligar agora do que lembrar de ligar na M1 (RNF-001) |
 | 2026-10-27 | Repositório **público** em `github.com/KaueChristian/StocKit` (conta `KaueChristian`, a mesma do LICENSE); commits publicados com o e-mail do autor como estão | Pedido do usuário: projeto de desenvolvimento/portfólio, sem nada sensível. Antes do push: busca por segredos em todo o histórico (nenhum) |
 | 2026-10-27 | PR de teste de portão: commits de violação feitos pela API do GitHub; PR fechado sem merge | Simula uma edição feita no site (sem pre-commit), que é o caso que o CI precisa barrar; não exige pular ganchos locais |
+| 2026-10-27 | Ao fechar milestone, a `main` recebe a `dev` por **fast-forward**, e a tag é **anotada** e fica na `main` | A `main` só recebe trabalho já aprovado no portão, então não há divergência a mesclar; a tag anotada guarda data e autor do fechamento |
 | 2026-10-27 | IDs de bug no §15 usam `BUG-xx` | `B-xx` já identifica o backlog (§12) |
 | 2026-10-27 | M0.10: **testes reais da RNF-006** no lugar do "teste dummy" ligado a um RF; TP-M0-05 passa a ser verificado com RNF-006 | Um dummy marcado com um RF faria a matriz mostrar o requisito como coberto sem nada verificado; os testes da RNF-006 ainda fecham o risco de versões divergentes entre pyproject, pre-commit e CI |
 | 2026-10-27 | Sentinela do import-linter roda em subprocesso sobre cópia temporária | Em processo, o `core` já importado pela suíte seria analisado no lugar da cópia; o repositório nunca é alterado pelo teste |

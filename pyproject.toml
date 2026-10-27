@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stockit"
-version = "0.0.0"
+version = "0.0.1"
 description = "Gerenciador de estoque universal: núcleo Python puro com desktop (Tkinter + SQLite) e web (Django + React)."
 readme = "README.md"
 license = "MIT"
